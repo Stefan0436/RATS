@@ -1,1 +1,1 @@
-# AerialWorks Remote Advanced Testing Suite (aka RaTs!)
+# ASF Remote Advanced Testing Suite (aka RaTs!)

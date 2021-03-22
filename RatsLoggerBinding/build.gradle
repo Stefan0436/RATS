@@ -9,7 +9,7 @@ group = "org.asf.rats"
 def authorname = "AerialWorks Software Development"
 
 apply plugin: 'eclipse'
-buildDir = '../build/RaTs-service'
+buildDir = '../build/RatsLoggerBinding'
 
 repositories {
     mavenCentral()
@@ -18,7 +18,7 @@ repositories {
 }
 
 jar {
-	destinationDirectory = file('../build/RaTs-service/Jars')
+	destinationDirectory = file('../build/RatsLoggerBinding/Jars')
 	manifest {
 		attributes([
 			"Specification-Title": project.name,
@@ -33,18 +33,38 @@ jar {
 	includeEmptyDirs = false
 }
 
+task javaDocs(type: Javadoc) {
+	classpath = sourceSets.main.runtimeClasspath
+	source = sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: 'javaDocs') {
+	from javadoc
+	classifier = 'javadoc'
+	exclude "**/extra/**"
+	destinationDirectory = file("../build/"+project.name+"/Javadoc Jars")
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+	exclude "**/extra/**"
+	destinationDirectory = file("../build/"+project.name+"/Source Jars")
+}
+
+artifacts {
+	archives javadocJar
+	archives sourcesJar
+}
+
 dependencies {
 	testImplementation 'junit:junit:4.12'
 	
-	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A5'
-	implementation group: 'org.asf.cyan', name: 'CyanUtil', version: '1.0.0.A3'
-	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A3'
-	
-	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service', version: '0.0.0.2'
-	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.2'
-	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-SMCORE', version: '0.0.0.2'
-	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-COMMUNICATION', version: '0.0.0.2'
-		
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
+	
+	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-SMCORE', version: '0.0.0.5'
+	
+	implementation project(':RatsMemory')
 }

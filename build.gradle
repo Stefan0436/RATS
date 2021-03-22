@@ -1,0 +1,52 @@
+plugins {
+	id 'java'
+}
+
+project(":").childProjects.each { proj ->
+	if (!proj.value.name.equals(project.name)) {
+		project.evaluationDependsOn ":"+proj.value.name
+	}
+}
+
+project(":").childProjects.each { proj ->
+	if (!proj.value.name.equals(project.name)) {
+		proj.value.configurations.implementation.canBeResolved = true
+	}
+}
+
+task installation () {
+	doLast {
+		copy {
+			from "rats"
+			from "rats-portable"
+			into "build/Installations"
+		}
+		project(":").childProjects.each { proj ->
+			if (!proj.value.name.equals(project.name)) {
+				for (ResolvedArtifact arti : proj.value.configurations.implementation.resolvedConfiguration.getResolvedArtifacts()) {
+					copy {
+						from arti.file
+						rename arti.file.getName(), arti.name + "." + arti.getExtension()
+						into "build/Installations"
+					}
+				}
+				for (def task : proj.value.tasks) {
+					if (task instanceof AbstractArchiveTask) {
+						copy {
+							from task.getArchiveFile().get()
+							rename task.getArchiveFile().get().getAsFile().getName(), task.getArchiveBaseName().get() + "." + task.getArchiveExtension().get()
+							into "build/Installations"
+						}
+					}
+				}
+			}
+		}
+	}
+}
+project(":").childProjects.each { proj ->
+	if (!proj.value.name.equals(project.name)) {
+		installation.dependsOn proj.value.tasks.build
+	}
+}
+
+build.finalizedBy installation

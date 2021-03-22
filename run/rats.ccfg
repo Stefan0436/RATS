@@ -1,0 +1,17 @@
+# WARNING!
+# At the time of writing, CCFG does not support value overwriting!
+# When a configuration changes programmatically, it will be re-generated entirely, comments will get lost!
+# 
+# RaTs Main Configuration File.
+# You can configure settings such as the server port here.
+
+# RaTs service port,
+# the rats command line interface connects with this port
+servicePort> 18120
+
+# Client connection ping interval (in miliseconds)
+connectionPingInterval> 5000
+
+repositories> {
+    Cyan Modloader> 'https://aerialworks.ddns.net/ASF/Cyan.git'
+}

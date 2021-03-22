@@ -1,2 +1,8 @@
 rootProject.name = 'RaTs!'
-include('RaTs-service')
+include('RatsComponents')
+include('RatsService')
+include('RatsEventBus')
+include('RatsBootstrap')
+include('RatsConfiguration')
+include('RatsLoggerBinding')
+include('RatsMemory')

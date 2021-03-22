@@ -24,4 +24,5 @@ classes> {
     org.asf.rats.service.RatsServiceManager> ':org.asf.rats.service.RatsServiceManager'
     org.asf.rats.components.RatsComponents> ':org.asf.rats.components.RatsComponents'
     org.asf.rats.components.ComponentConfiguration> ':org.asf.rats.components.RatsComponents'
+    org.asf.rats.events.RatsEventBusComponent> ':org.asf.rats.events.RatsEventBusComponent'
 }

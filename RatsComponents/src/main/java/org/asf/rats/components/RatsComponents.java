@@ -19,6 +19,11 @@ public class RatsComponents extends CyanComponent {
 	private static ComponentConfiguration conf;
 	
 	public static String getMarker() {
+		return "RESOLVER";
+	}
+	
+	@Override
+	public String getLoggerName() {
 		return "RATS";
 	}
 

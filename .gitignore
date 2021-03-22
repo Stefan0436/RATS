@@ -12,3 +12,5 @@ bin/
 .workspace/
 .egradle/
 
+# Run files
+run/

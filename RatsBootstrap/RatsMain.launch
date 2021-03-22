@@ -15,5 +15,5 @@
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="RatsBootstrap"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="RatsBootstrap"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-DideMode"/>
-    <stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:RaTs!/run}"/>
+    <stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:RatsBootstrap}/../run"/>
 </launchConfiguration>

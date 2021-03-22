@@ -1,4 +1,4 @@
-package org.asf.rats.events;
+package org.asf.rats;
 
 import org.asf.aos.util.service.extra.slib.smcore.SlibLogHandler;
 

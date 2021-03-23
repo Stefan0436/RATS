@@ -67,7 +67,7 @@ public class ComponentConfiguration extends Configuration<ComponentConfiguration
 		ArrayList<String> classes = new ArrayList<String>();
 		ArrayList<URL> urls = new ArrayList<URL>();
 		classCache.clear();
-		
+
 		conf.earlyClasses.forEach((k, v) -> {
 			String source = v;
 			if (source.startsWith(":")) {
@@ -91,7 +91,7 @@ public class ComponentConfiguration extends Configuration<ComponentConfiguration
 			}
 			classes.add(k);
 		});
-		
+
 		conf.classes.forEach((k, v) -> {
 			String source = v;
 			if (source.startsWith(":")) {
@@ -138,6 +138,7 @@ public class ComponentConfiguration extends Configuration<ComponentConfiguration
 	}
 
 	public ComponentConfiguration() {
+		super(System.getProperty("rats.config.dir") == null ? baseDir : System.getProperty("rats.config.dir"));
 		if (!exists()) {
 			InputStream strm = getClass().getResourceAsStream("/components.ccfg");
 			Scanner sc = new Scanner(strm);

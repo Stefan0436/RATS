@@ -34,6 +34,7 @@ public class RatsConfiguration extends Configuration<RatsConfiguration> {
 	}
 
 	private RatsConfiguration() {
+		super(System.getProperty("rats.config.dir") == null ? baseDir : System.getProperty("rats.config.dir"));
 	}
 
 	@Override

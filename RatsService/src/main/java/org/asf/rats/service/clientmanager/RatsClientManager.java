@@ -1,4 +1,4 @@
-package org.asf.rats.service;
+package org.asf.rats.service.clientmanager;
 
 import java.io.IOException;
 
@@ -9,6 +9,9 @@ import org.asf.aos.util.service.extra.slib.communication.SlibPacket;
 import org.asf.aos.util.service.extra.slib.communication.SlibUtilService;
 import org.asf.aos.util.service.extra.slib.smcore.SlibManager;
 import org.asf.aos.util.service.extra.slib.smcore.SlibModule;
+import org.asf.rats.events.EventManager;
+import org.asf.rats.service.ClientManagerThread;
+import org.asf.rats.service.RatsUtilService;
 
 public class RatsClientManager extends ServiceModule implements SlibModule {
 	private Thread managerThread = new Thread(new ClientManagerThread());
@@ -50,6 +53,14 @@ public class RatsClientManager extends ServiceModule implements SlibModule {
 				service.disconnectClient(client);
 			}
 			managerThread.stop();
+		});
+
+		RatsUtilService ratsService = (RatsUtilService) service;
+		ratsService.attachClientConnectionEventListener((SlibClient client) -> {
+			EventManager.dispatchEvent("client.connected", client);
+		});
+		ratsService.attachClientDisconnectionEventListener((SlibClient client) -> {
+			EventManager.dispatchEvent("client.disconnected", client);
 		});
 	}
 

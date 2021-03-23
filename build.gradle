@@ -19,14 +19,16 @@ task installation () {
 		copy {
 			from "rats"
 			from "rats-portable"
+			from "rats-service"
+			from "rats-service-portable"
 			into "build/Installations"
 		}
 		project(":").childProjects.each { proj ->
 			if (!proj.value.name.equals(project.name)) {
 				for (ResolvedArtifact arti : proj.value.configurations.implementation.resolvedConfiguration.getResolvedArtifacts()) {
-					copy {
+					copy {							
 						from arti.file
-						rename arti.file.getName(), arti.name + "." + arti.getExtension()
+						rename arti.file.getName(), arti.name + (arti.getClassifier() != null && !arti.getClassifier().isEmpty() ? "-" + arti.getClassifier() : "") + "." + arti.getExtension()
 						into "build/Installations"
 					}
 				}
@@ -34,7 +36,7 @@ task installation () {
 					if (task instanceof AbstractArchiveTask) {
 						copy {
 							from task.getArchiveFile().get()
-							rename task.getArchiveFile().get().getAsFile().getName(), task.getArchiveBaseName().get() + "." + task.getArchiveExtension().get()
+							rename task.getArchiveFile().get().getAsFile().getName(), task.getArchiveBaseName().get() + (task.getArchiveClassifier().get() != null && !task.getArchiveClassifier().get().isEmpty() ? "-" + task.getArchiveClassifier().get() : "") + "." + task.getArchiveExtension().get()
 							into "build/Installations"
 						}
 					}

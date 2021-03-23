@@ -52,4 +52,15 @@ public class ListenerList implements Iterable<IEventListener> {
 		cEntry.listener = listener;
 	}
 
+	public boolean contains(IEventListener listener) {
+		Cell entry = main;
+		while (entry != null) {
+			if (entry.listener.getListenerName().equals(listener.getListenerName())) {
+				return true;
+			}
+			entry = entry.next;
+		}
+		return false;
+	}
+
 }

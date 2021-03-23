@@ -26,13 +26,13 @@ public class MirrorLogger implements SlibLogHandler {
 	@Override
 	public void error(String message, String channel) {
 		base.error(message, channel);
-		mirror.debug("[MIRROR/ERROR ] " + message, channel);
+		mirror.debug("[MIRROR/ERROR] " + message, channel);
 	}
 
 	@Override
 	public void warn(String message, String channel) {
 		base.warn(message, channel);
-		mirror.debug("[MIRROR/WARN  ] " + message, channel);
+		mirror.debug("[MIRROR/WARN] " + message, channel);
 	}
 
 	@Override
@@ -44,13 +44,13 @@ public class MirrorLogger implements SlibLogHandler {
 	@Override
 	public void info(String message, String channel) {
 		base.info(message, channel);
-		mirror.debug("[MIRROR/INFO  ] " + message, channel);
+		mirror.debug("[MIRROR/INFO] " + message, channel);
 	}
 
 	@Override
 	public void debug(String message, String channel) {
 		base.debug(message, channel);
-		mirror.debug("[MIRROR/DEBUG ] " + message, channel);
+		mirror.debug("[MIRROR/DEBUG] " + message, channel);
 	}
 
 	@Override
@@ -62,6 +62,6 @@ public class MirrorLogger implements SlibLogHandler {
 	@Override
 	public void trace(String message, String channel) {
 		base.trace(message, channel);
-		mirror.debug("[MIRROR/TRACE  ] " + message, channel);
+		mirror.debug("[MIRROR/TRACE] " + message, channel);
 	}
 }

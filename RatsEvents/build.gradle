@@ -1,0 +1,76 @@
+plugins {
+    id 'java'
+	id 'maven-publish'
+}
+
+version = "1.0.0.A1"
+group = "org.asf.rats"
+
+def authorname = "AerialWorks Software Development"
+
+apply plugin: 'eclipse'
+buildDir = '../build/RatsEvents'
+
+repositories {
+    mavenCentral()
+    jcenter()
+	maven { name = "AerialWorks"; url = "https://aerialworks.ddns.net/maven" }
+}
+
+jar {
+	destinationDirectory = file('../build/RatsEvents/Jars')
+	manifest {
+		attributes([
+			"Specification-Title": project.name,
+			"Specification-Vendor": "${authorname}",
+			"Specification-Version": project.version,
+			"Implementation-Title": project.name,
+			"Implementation-Version": project.version,
+			"Implementation-Vendor" :"${authorname}",
+			"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+		])
+	}
+	includeEmptyDirs = false
+}
+
+task javaDocs(type: Javadoc) {
+	classpath = sourceSets.main.runtimeClasspath
+	source = sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: 'javaDocs') {
+	from javadoc
+	classifier = 'javadoc'
+	exclude "**/extra/**"
+	destinationDirectory = file("../build/"+project.name+"/Javadoc Jars")
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+	exclude "**/extra/**"
+	destinationDirectory = file("../build/"+project.name+"/Source Jars")
+}
+
+artifacts {
+	archives javadocJar
+	archives sourcesJar
+}
+
+dependencies {
+	testImplementation 'junit:junit:4.12'
+	
+	implementation project(":RatsEventBus")
+	implementation project(":RatsComponents")
+
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service', version: '0.0.0.11'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.11'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-MATH', version: '0.0.0.11'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-SMCORE', version: '0.0.0.11'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-LOADSET', version: '0.0.0.11'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-COMMUNICATION', version: '0.0.0.11'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-PACKETPROCESSING', version: '0.0.0.11'
+	
+	implementation group: 'org.asf.cyan', name: 'CyanUtil', version: '1.0.0.A4'
+	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
+}

@@ -20,9 +20,14 @@ earlyClasses> {
 classes> {
     org.asf.rats.service.clientmanager.ClientManagerConnectedProcessor> ':org.asf.rats.service.clientmanager.ClientManagerConnectedProcessor'
     org.asf.rats.service.clientmanager.ClientManagerDisconnectedProcessor> ':org.asf.rats.service.clientmanager.ClientManagerDisconnectedProcessor'
-    org.asf.rats.service.RatsClientManager> ':org.asf.rats.service.RatsClientManager'
+    org.asf.rats.service.clientmanager.RatsClientManager> ':org.asf.rats.service.clientmanager.RatsClientManager'
+    org.asf.rats.service.clientmanager.events.ConnectionEventProvider> ':org.asf.rats.service.clientmanager.events.ConnectionEventProvider'
+    org.asf.rats.service.clientmanager.events.DisconnectionEventProvider> ':org.asf.rats.service.clientmanager.events.DisconnectionEventProvider'
+    org.asf.rats.service.eventdispatcher.EventDispatcher> ':org.asf.rats.service.eventdispatcher.EventDispatcher'
+    org.asf.rats.service.eventdispatcher.DispatchPacketProcessor> ':org.asf.rats.service.eventdispatcher.DispatchPacketProcessor'
     org.asf.rats.service.RatsServiceManager> ':org.asf.rats.service.RatsServiceManager'
     org.asf.rats.components.RatsComponents> ':org.asf.rats.components.RatsComponents'
     org.asf.rats.components.ComponentConfiguration> ':org.asf.rats.components.RatsComponents'
     org.asf.rats.events.RatsEventBusComponent> ':org.asf.rats.events.RatsEventBusComponent'
+    org.asf.rats.events.HelpEvent> ':org.asf.rats.events.HelpEvent'
 }

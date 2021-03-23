@@ -64,6 +64,7 @@ dependencies {
 	implementation project(':RatsConfiguration')
 	implementation project(':RatsComponents')
 	implementation project(':RatsService')
+	implementation project(':RatsEvents')
 	implementation project(':RatsEventBus')
 	implementation project(':RatsLoggerBinding')
 

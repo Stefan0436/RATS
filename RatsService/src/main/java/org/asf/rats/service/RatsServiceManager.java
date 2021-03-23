@@ -35,14 +35,14 @@ import org.asf.rats.configuration.RatsConfiguration;
 @CYAN_COMPONENT
 public class RatsServiceManager {
 	public static final String RATS_SERUP_CHANNEL = "RATS-SERVICE-SETUP";
-	
+
 	private static boolean ownThread;
 	private static SlibUtilService service;
 	private static SlibCoremodule moduleStartMethod;
 	private static ArrayList<ServiceModule> modules;
 	private static ArrayList<SlibStopHandler> lowLevelStopHandlers;
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked" })
 	protected static void initComponent() {
 		try {
 			Field field = SlibPacket.class.getDeclaredField("fromServer");
@@ -53,8 +53,7 @@ public class RatsServiceManager {
 		}
 
 		ProcessorRegistry.setClassRetriever(() -> {
-			return (Class<? extends ServicePacketProcessor<?>>[]) RatsComponents
-					.findClasses(ServicePacketProcessor.class);
+			return (Class[]) RatsComponents.findClasses(ServicePacketProcessor.class);
 		});
 
 		SlibLogger.addLogger(Memory.getInstance().getOrCreate("logging.bindings").getValue(SlibLogHandler.class));
@@ -109,8 +108,13 @@ public class RatsServiceManager {
 				SlibLogger.info("Loading AOS-UTIL service...", RATS_SERUP_CHANNEL);
 				ownThread = SlibManager.startInOwnThread;
 				service = SlibManager.constructingService;
-				if (service == null) {
-					service = new SlibUtilService();
+				if (service == null || !(service instanceof RatsUtilService)) {
+					if (service != null) {
+						SlibLogger.warn(
+								"A coremodule was loaded that replaced the service with an incompatible one, cannot use it!",
+								RATS_SERUP_CHANNEL);
+					}
+					service = new RatsUtilService();
 				}
 
 				service.setMode(true);
@@ -235,10 +239,9 @@ public class RatsServiceManager {
 					}
 				}
 
-				
 			}
 		});
-		
+
 		Memory.getInstance().getOrCreate("bootstrap.exec.call").append(new Runnable() {
 
 			@Override
@@ -298,7 +301,7 @@ public class RatsServiceManager {
 				} else
 					moduleStartMethod.startMethod(service);
 			}
-			
+
 		});
 	}
 

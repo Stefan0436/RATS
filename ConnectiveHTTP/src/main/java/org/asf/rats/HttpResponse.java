@@ -129,8 +129,8 @@ public class HttpResponse {
 			resp.append(v);
 		});
 
+		resp.append("\r\n");
 		if (intermediary != null) {
-			resp.append("\r\n");
 			resp.append("\r\n");
 			strm.write(resp.toString().getBytes());
 			strm.write(intermediary.toByteArray());

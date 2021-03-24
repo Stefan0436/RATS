@@ -26,7 +26,7 @@ import org.asf.rats.processors.IAutoRegisterProcessor;
  * Memory}.<br />
  * Memory keys:<br />
  * - <b>connective.http.props.autostart</b> - true to autostart, false
- * otherwise.</b><br />
+ * otherwise.<br />
  * - <b>connective.http.props.port</b> - server port
  * 
  * @author Stefan0436 - AerialWorks Software Foundation

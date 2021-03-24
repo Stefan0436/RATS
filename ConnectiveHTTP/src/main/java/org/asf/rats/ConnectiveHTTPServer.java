@@ -62,13 +62,6 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				Thread clientProcessor = new Thread(() -> {
 
 					try {
-						try {
-							while (in.available() == 0) {
-								Thread.sleep(10);
-							}
-						} catch (InterruptedException e) {
-						}
-
 						HttpRequest msg = HttpRequest.parse(readStreamForRequest(in));
 						if (msg == null) {
 							HttpRequest dummy = new HttpRequest();
@@ -157,9 +150,16 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	/**
-	 * Reads the client input stream available bytes. (for http request generation)
+	 * Reads the client input stream bytes. (for http request generation)
 	 */
 	protected byte[] readStreamForRequest(InputStream in) throws IOException {
+		try {
+			while (in.available() == 0) {
+				Thread.sleep(10);
+			}
+		} catch (InterruptedException e) {
+			
+		}
 		return in.readNBytes(in.available());
 	}
 
@@ -174,6 +174,13 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	 */
 	protected void clientOutWrite(OutputStream strm, byte[] content) throws IOException {
 		strm.write(content);
+	}
+
+	/**
+	 * Called to construct a new server socket (override only)
+	 */
+	protected ServerSocket getServerSocket(int port) throws IOException {
+		return new ServerSocket(port);
 	}
 
 	/**
@@ -205,7 +212,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 					String supportedURL = proc.path();
 					if (!supportedURL.endsWith("/"))
 						supportedURL += "/";
-					
+
 					if (url.equals(supportedURL)) {
 						compatible = true;
 						impl = proc;
@@ -251,7 +258,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 					String supportedURL = proc.path();
 					if (!supportedURL.endsWith("/"))
 						supportedURL += "/";
-					
+
 					if (url.equals(supportedURL)) {
 						compatible = true;
 						impl = proc;
@@ -368,7 +375,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			throw new IllegalStateException("Server already running!");
 
 		connected = true;
-		socket = new ServerSocket(port);
+		socket = getServerSocket(port);
 		serverProcessor.start();
 	}
 

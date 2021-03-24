@@ -131,6 +131,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		Boolean autostart = Memory.getInstance().getOrCreate("connective.http.props.autostart").getValue(Boolean.class);
 		if (autostart == null)
 			autostart = true;
+
 		Integer portSetting = Memory.getInstance().getOrCreate("connective.http.props.port").getValue(Integer.class);
 		if (portSetting == null)
 			portSetting = server.port;
@@ -197,7 +198,15 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			HttpPostProcessor impl = null;
 			for (HttpPostProcessor proc : postProcessorLst) {
 				if (!proc.supportsChildPaths()) {
-					if (proc.path().equals(msg.path)) {
+					String url = msg.path;
+					if (!url.endsWith("/"))
+						url += "/";
+
+					String supportedURL = proc.path();
+					if (!supportedURL.endsWith("/"))
+						supportedURL += "/";
+					
+					if (url.equals(supportedURL)) {
 						compatible = true;
 						impl = proc;
 						break;
@@ -206,7 +215,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			}
 			if (!compatible) {
 				postProcessorLst.sort((t1, t2) -> {
-					return Integer.compare(t1.path().length(), t2.path().length());
+					return -Integer.compare(t1.path().split("/").length, t2.path().split("/").length);
 				});
 				for (HttpPostProcessor proc : postProcessorLst) {
 					if (proc.supportsChildPaths()) {
@@ -235,7 +244,15 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			HttpGetProcessor impl = null;
 			for (HttpGetProcessor proc : getProcessorLst) {
 				if (!proc.supportsChildPaths()) {
-					if (proc.path().equals(msg.path)) {
+					String url = msg.path;
+					if (!url.endsWith("/"))
+						url += "/";
+
+					String supportedURL = proc.path();
+					if (!supportedURL.endsWith("/"))
+						supportedURL += "/";
+					
+					if (url.equals(supportedURL)) {
 						compatible = true;
 						impl = proc;
 						break;
@@ -244,7 +261,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			}
 			if (!compatible) {
 				getProcessorLst.sort((t1, t2) -> {
-					return Integer.compare(t1.path().length(), t2.path().length());
+					return -Integer.compare(t1.path().split("/").length, t2.path().split("/").length);
 				});
 				for (HttpGetProcessor proc : getProcessorLst) {
 					if (proc.supportsChildPaths()) {

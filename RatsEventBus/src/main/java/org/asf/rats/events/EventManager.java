@@ -49,6 +49,9 @@ public class EventManager extends CyanComponent {
 
 		for (Class<IEventProvider> provider : RatsComponents.findClasses(IEventProvider.class)) {
 			try {
+				if (IPromotedEventProvider.class.getTypeName().equals(provider.getTypeName()))
+					continue;
+				
 				IEventProvider prov = provider.getConstructor().newInstance();
 				if (prov instanceof IPromotedEventProvider) {
 					promotedProviders.put(provider.getTypeName(), (IPromotedEventProvider) prov);

@@ -40,6 +40,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 
 	protected boolean connected = false;
 	protected ServerSocket socket = null;
+
 	protected ArrayList<Socket> sockets = new ArrayList<Socket>();
 	protected HashMap<Socket, InputStream> inStreams = new HashMap<Socket, InputStream>();
 	protected HashMap<Socket, OutputStream> outStreams = new HashMap<Socket, OutputStream>();
@@ -53,10 +54,13 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		while (connected) {
 			try {
 				Socket client = socket.accept();
-				InputStream in = client.getInputStream();
-				OutputStream out = client.getOutputStream();
+
+				acceptConnection(client);
+				InputStream in = getClientInput(client);
+				OutputStream out = getClientOutput(client);
 
 				Thread clientProcessor = new Thread(() -> {
+
 					try {
 						try {
 							while (in.available() == 0) {
@@ -65,7 +69,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 						} catch (InterruptedException e) {
 						}
 
-						HttpRequest msg = HttpRequest.parse(in.readNBytes(in.available()));
+						HttpRequest msg = HttpRequest.parse(readStreamForRequest(in));
 						if (msg == null) {
 							HttpRequest dummy = new HttpRequest();
 							dummy.version = "HTTP/1.1";
@@ -76,12 +80,14 @@ public class ConnectiveHTTPServer extends CyanComponent {
 						}
 					} catch (IOException ex) {
 					}
+
 				}, "Client processor (" + client.getInetAddress().toString() + ":" + client.getPort() + ")");
 
 				clientProcessor.start();
 				sockets.add(client);
 				inStreams.put(client, in);
 				outStreams.put(client, out);
+
 			} catch (IOException ex) {
 				if (!connected)
 					break;
@@ -133,6 +139,40 @@ public class ConnectiveHTTPServer extends CyanComponent {
 
 		if (autostart)
 			server.start();
+	}
+
+	/**
+	 * Retrieves the client output stream (override only)
+	 */
+	private OutputStream getClientOutput(Socket client) throws IOException {
+		return client.getOutputStream();
+	}
+
+	/**
+	 * Retrieves the client input stream (override only)
+	 */
+	protected InputStream getClientInput(Socket client) throws IOException {
+		return client.getInputStream();
+	}
+
+	/**
+	 * Reads the client input stream available bytes. (for http request generation)
+	 */
+	protected byte[] readStreamForRequest(InputStream in) throws IOException {
+		return in.readNBytes(in.available());
+	}
+
+	/**
+	 * Called on client connect, potential override.
+	 */
+	protected void acceptConnection(Socket client) {
+	}
+
+	/**
+	 * Called to write to the client output (override only)
+	 */
+	protected void clientOutWrite(OutputStream strm, byte[] content) throws IOException {
+		strm.write(content);
 	}
 
 	/**
@@ -227,6 +267,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			if (compatible) {
 				HttpGetProcessor processor = impl.instanciate(this, msg);
 				processor.process(client);
+
 				closeConnection(processor.getResponse(), client);
 			}
 		}
@@ -249,7 +290,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	 * @throws IOException If transmitting the response fails
 	 */
 	public synchronized HttpResponse closeConnection(HttpResponse response, Socket client) throws IOException {
-		outStreams.get(client).write(response.addDefaultHeaders(this).setConnectionState("Closed").build());
+		clientOutWrite(outStreams.get(client), response.addDefaultHeaders(this).setConnectionState("Closed").build());
 		closeConnection(client);
 		return response;
 	}
@@ -295,7 +336,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	public synchronized HttpResponse closeConnection(HttpRequest request, int status, String message, Socket client)
 			throws IOException {
 		HttpResponse resp = new HttpResponse(status, message, request);
-		outStreams.get(client).write(resp.addDefaultHeaders(this).setConnectionState("Closed").build());
+		clientOutWrite(outStreams.get(client), resp.addDefaultHeaders(this).setConnectionState("Closed").build());
 		closeConnection(client);
 		return resp;
 	}

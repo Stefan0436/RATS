@@ -18,7 +18,7 @@ public abstract class HttpPostProcessor extends HttpGetProcessor {
 	public void process(Socket client) {
 		process(null, null, client);
 	}
-	
+
 	/**
 	 * Instanciates a new processor with the server and request.
 	 * 

@@ -8,6 +8,8 @@ import org.asf.aos.util.service.extra.slib.communication.SlibPacket;
 import org.asf.aos.util.service.extra.slib.communication.SlibUtilService;
 import org.asf.aos.util.service.extra.slib.processors.ServicePacketProcessor;
 import org.asf.rats.events.EventManager;
+import org.asf.rats.events.util.IPromotedEventProvider;
+import org.asf.rats.events.util.ISyntaxSensitivePromotedEvent;
 import org.asf.rats.service.packet.PacketEntry;
 import org.asf.rats.service.packet.PacketParser;
 
@@ -51,25 +53,59 @@ public class DispatchPacketProcessor extends ServicePacketProcessor<EventDispatc
 
 		if (ch != null) {
 			try {
-				EventManager.dispatchEvent(ch, params.toArray(t -> new Object[t]));
-			} catch (Exception e) {
-				if (e instanceof IllegalStateException
-						&& e.getMessage().startsWith("Event channel " + ch + " could not be found, caller: ")) {
-					netLogger.error("Event not recognized! Use the help event for a list of events.",
-							"RATS-EVENT-MANAGER");
-				} else {
-					StringBuilder stack = new StringBuilder();
-					for (StackTraceElement element : e.getStackTrace()) {
-						stack.append("\tat ").append(element).append(System.lineSeparator());
+				IPromotedEventProvider prov = EventManager.getPromotedProvider(ch);
+				if (prov instanceof ISyntaxSensitivePromotedEvent) {
+					boolean incorrectSyntax = false;
+					ISyntaxSensitivePromotedEvent sProv = (ISyntaxSensitivePromotedEvent) prov;
+					if (params.size() - 1 < sProv.minimalParameterCount()
+							|| params.size() - 1 > sProv.maximalParameterCount()) {
+						incorrectSyntax = true;
+					} else {
+						Class<?>[] classes = sProv.parameterTypes();
+						for (int i = 1; i < params.size(); i++) {
+							Class<?> clsParam = params.get(i).getClass();
+							Class<?> clsExpected = classes[i - 1];
+							if (!clsExpected.isAssignableFrom(clsParam)) {
+								incorrectSyntax = true;
+								break;
+							}
+						}
 					}
-					netLogger.error(
-							"Dispatch failed!\nException: " + e.getClass().getTypeName() + ": " + e.getMessage() + "\n" + stack,
-							"RATS-EVENT-MANAGER");
+
+					if (incorrectSyntax) {
+						StringBuilder builder = new StringBuilder();
+						builder.append(prov.getChannelName())
+								.append(prov.getSyntax().isEmpty() ? "" : " " + prov.getSyntax()).append(" - ")
+								.append(prov.getDescription());
+
+						netLogger.error("Invalid usage!", "RATS-EVENT-MANAGER");
+						netLogger.error("Usage: " + builder, "RATS-EVENT-MANAGER");
+						ch = null;
+					}
+				}
+			} catch (IllegalStateException ex) {
+			}
+
+			if (ch != null) {
+				try {
+					EventManager.dispatchEvent(ch, params.toArray(t -> new Object[t]));
+				} catch (Exception e) {
+					if (e instanceof IllegalStateException
+							&& e.getMessage().startsWith("Event channel " + ch + " could not be found, caller: ")) {
+						netLogger.error("Event not recognized! Use the help event for a list of events.",
+								"RATS-EVENT-MANAGER");
+					} else {
+						StringBuilder stack = new StringBuilder();
+						for (StackTraceElement element : e.getStackTrace()) {
+							stack.append("\tat ").append(element).append(System.lineSeparator());
+						}
+						netLogger.error("Dispatch failed!\nException: " + e.getClass().getTypeName() + ": " + e.getMessage()
+								+ "\n" + stack, "RATS-EVENT-MANAGER");
+					}
 				}
 			}
 		} else {
-			netLogger.error("Event not recognized! Use the help event for a list of events.",
-					"RATS-EVENT-MANAGER");
+			netLogger.error("Event not recognized! Use the help event for a list of events.", "RATS-EVENT-MANAGER");
 		}
 
 		if (netLogger.isConnected()) {

@@ -5,6 +5,7 @@ import org.asf.cyan.api.events.IEventProvider;
 import org.asf.cyan.api.events.core.BiTypedSynchronizedEventListener;
 import org.asf.rats.components.RatsComponents;
 import org.asf.rats.events.util.IPromotedEventProvider;
+import org.asf.rats.events.util.ISyntaxSensitivePromotedEvent;
 
 public class HelpEvent implements IPromotedEventProvider, BiTypedSynchronizedEventListener<SlibLogHandler, String> {
 
@@ -58,7 +59,8 @@ public class HelpEvent implements IPromotedEventProvider, BiTypedSynchronizedEve
 		StringBuilder builder = new StringBuilder();
 		for (Class<? extends IEventProvider> provider : RatsComponents.findClasses(IEventProvider.class)) {
 			if (IPromotedEventProvider.class.isAssignableFrom(provider)
-					&& !provider.getTypeName().equals(IPromotedEventProvider.class.getTypeName())) {
+					&& !provider.getTypeName().equals(IPromotedEventProvider.class.getTypeName())
+					&& !ISyntaxSensitivePromotedEvent.class.getTypeName().equals(provider.getTypeName())) {
 				IPromotedEventProvider prov = EventManager.getPromotedProvider(provider);
 				boolean match = true;
 

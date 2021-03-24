@@ -32,10 +32,12 @@ public class ClientMain {
 		while (true) {
 			if (client == null)
 				break;
+
 			if (!client.hasConnection()) {
 				client.disconnect();
 				break;
 			}
+
 			try {
 				Thread.sleep(ClientConfiguration.getInstance().connectionPingInterval);
 			} catch (InterruptedException | ThreadDeath e) {
@@ -43,7 +45,6 @@ public class ClientMain {
 		}
 	}, "RaTs! Client Connection Checker");
 
-	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws IOException {
 		if (System.getProperty("ideMode") != null) {
 			System.setProperty("log4j2.configurationFile", ClientMain.class.getResource("/log4j2-ide.xml").toString());
@@ -64,6 +65,7 @@ public class ClientMain {
 		client.setMode(true);
 
 		client.registerProcessor(new LoggerProcessor());
+		
 		client.registerProcessor(new ClientPacketProcessor() {
 
 			@Override
@@ -92,7 +94,7 @@ public class ClientMain {
 			} catch (InterruptedException e) {
 			}
 		}
-		
+
 		PacketBuilder builder = new PacketBuilder();
 		for (String arg : args) {
 			builder.add(arg);
@@ -102,7 +104,7 @@ public class ClientMain {
 		try {
 			netCheckThread.start();
 		} catch (Exception e) {
-			
+
 		}
 		while (!completed) {
 			try {
@@ -110,17 +112,15 @@ public class ClientMain {
 			} catch (InterruptedException e) {
 			}
 		}
-		
+
 		if (!overrideClient) {
 			System.exit(0);
 			return;
 		}
-		
-		netCheckThread.stop();
-		
+
 		client.disconnect();
 		client = null;
-		
+
 		SlibLogger.removeLogger(logger.id());
 	}
 

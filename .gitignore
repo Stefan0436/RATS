@@ -14,3 +14,4 @@ bin/
 
 # Run files
 run/*
+RatsClient/run/*

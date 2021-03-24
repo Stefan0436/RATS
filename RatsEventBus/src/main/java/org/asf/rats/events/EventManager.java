@@ -28,6 +28,7 @@ public class EventManager extends CyanComponent {
 	private static EventBus mainEventBus;
 	private static EventBusFactory<?> eventBusFactory;
 	private static HashMap<String, IPromotedEventProvider> promotedProviders = new HashMap<String, IPromotedEventProvider>();
+	private static HashMap<String, IPromotedEventProvider> promotedProvidersByEvent = new HashMap<String, IPromotedEventProvider>();
 
 	private static boolean init = false;
 
@@ -45,12 +46,13 @@ public class EventManager extends CyanComponent {
 		mainEventBus = eventBusFactory.createBus("rats.events");
 
 		init = true;
-		
+
 		for (Class<IEventProvider> provider : RatsComponents.findClasses(IEventProvider.class)) {
 			try {
 				IEventProvider prov = provider.getConstructor().newInstance();
 				if (prov instanceof IPromotedEventProvider) {
 					promotedProviders.put(provider.getTypeName(), (IPromotedEventProvider) prov);
+					promotedProvidersByEvent.put(prov.getChannelName(), (IPromotedEventProvider) prov);
 				}
 				createEventChannel(prov.getChannelName());
 				if (prov instanceof IEventListener) {
@@ -79,6 +81,20 @@ public class EventManager extends CyanComponent {
 			}
 		} else {
 			throw new IllegalStateException("The given provider has not been promoted!");
+		}
+	}
+
+	/**
+	 * Retrieves a promoted event provider by its event.
+	 * 
+	 * @param event Event name
+	 * @return IPromotedEventProvider instance.
+	 */
+	public static IPromotedEventProvider getPromotedProvider(String event) {
+		if (!promotedProvidersByEvent.containsKey(event))
+			throw new IllegalStateException("The given provider has not been registered!");
+		else {
+			return promotedProvidersByEvent.get(event);
 		}
 	}
 

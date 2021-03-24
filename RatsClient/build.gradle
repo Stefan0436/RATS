@@ -14,7 +14,7 @@ buildDir = '../build/RatsClient'
 
 repositories {
 	mavenCentral()
-	jcenter()
+	
 	maven { name = "AerialWorks"; url = "https://aerialworks.ddns.net/maven" }
 }
 

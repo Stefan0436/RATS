@@ -13,7 +13,7 @@ buildDir = '../build/RatsEventBus'
 
 repositories {
     mavenCentral()
-    jcenter()
+    
 	maven { name = "AerialWorks"; url = "https://aerialworks.ddns.net/maven" }
 }
 

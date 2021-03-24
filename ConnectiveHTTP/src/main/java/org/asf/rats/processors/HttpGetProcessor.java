@@ -160,6 +160,14 @@ public abstract class HttpGetProcessor {
 
 		return response;
 	}
+	
+	/**
+	 * Retrieves the HTTP request 'path'
+	 * @return Request path
+	 */
+	public String getRequestPath()  {
+		return getRequest().path;
+	}
 
 	/**
 	 * Retrieves the path this processor supports

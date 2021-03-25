@@ -67,6 +67,8 @@ dependencies {
 	implementation project(':RatsEvents')
 	implementation project(':RatsEventBus')
 	implementation project(':RatsLoggerBinding')
+	implementation project(':HttpServiceModule')
+	implementation project(':HttpBasicFileModule')
 
 	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
 }

@@ -1,9 +1,11 @@
 package org.asf.rats.configuration;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.function.Consumer;
 
-import org.asf.cyan.api.config.Configuration;
 import org.asf.cyan.api.config.annotations.Comment;
+import org.asf.rats.ModuleBasedConfiguration;
 
 /**
  * 
@@ -18,9 +20,14 @@ import org.asf.cyan.api.config.annotations.Comment;
 @Comment("")
 @Comment("RaTs Main Configuration File.")
 @Comment("You can configure settings such as the server port here.")
-public class RatsConfiguration extends Configuration<RatsConfiguration> {
+public class RatsConfiguration extends ModuleBasedConfiguration<RatsConfiguration> {
 
 	private static RatsConfiguration instance;
+	private static ArrayList<Consumer<RatsConfiguration>> loadHooks = new ArrayList<Consumer<RatsConfiguration>>();
+
+	public static void addLoadHook(Consumer<RatsConfiguration> hook) {
+		loadHooks.add(hook);
+	}
 
 	public static RatsConfiguration getInstance() {
 		if (instance == null) {
@@ -35,6 +42,9 @@ public class RatsConfiguration extends Configuration<RatsConfiguration> {
 
 	private RatsConfiguration() {
 		super(System.getProperty("rats.config.dir") == null ? baseDir : System.getProperty("rats.config.dir"));
+		for (Consumer<RatsConfiguration> call : loadHooks) {
+			call.accept(this);
+		}
 	}
 
 	@Override
@@ -47,10 +57,21 @@ public class RatsConfiguration extends Configuration<RatsConfiguration> {
 		return "";
 	}
 
+	@Override
+	public RatsConfiguration readAll(String content, boolean allowWrite, boolean newfile) {
+		for (Consumer<RatsConfiguration> call : loadHooks) {
+			call.accept(this);
+		}
+		return super.readAll(content, allowWrite, newfile);
+	}
+
 	@Comment("RaTs service port,")
 	@Comment("the rats command line interface connects with this port")
 	public int servicePort = 18120;
 
 	@Comment("Client connection ping interval (in miliseconds)")
 	public int connectionPingInterval = 5000;
+
+	@Comment("HTTP Server Port")
+	public int httpPort = 8080;
 }

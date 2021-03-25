@@ -1,5 +1,7 @@
 package org.asf.rats;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 
 /**
@@ -16,6 +18,7 @@ public class HttpRequest {
 	public String method = "";
 	public String version = "";
 	public String body = "";
+	public String query = "";
 
 	/**
 	 * Parses a request into a new HttpMessage object.
@@ -39,8 +42,15 @@ public class HttpRequest {
 			if (first) {
 				first = false;
 				String[] mainHeader = line.split(" ");
+				URI req;
+				try {
+					req = new URI(mainHeader[1]);
+					msg.path = req.getPath();
+					msg.query = req.getQuery();
+				} catch (URISyntaxException e) {
+					msg.path = mainHeader[1];
+				}
 				msg.method = mainHeader[0];
-				msg.path = mainHeader[1];
 				msg.version = mainHeader[2];
 			} else {
 				String key = line.substring(0, line.indexOf(": "));

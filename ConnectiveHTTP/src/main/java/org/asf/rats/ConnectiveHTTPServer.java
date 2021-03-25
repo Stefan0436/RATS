@@ -17,7 +17,8 @@ import org.asf.rats.processors.IAutoRegisterProcessor;
 
 /**
  * 
- * ConnectiveHTTP Server, HTTP Server API.<br />
+ * ConnectiveHTTP Server, HTTP Server API. <b>Avoid direct construction, use the
+ * factory instead: {@link ConnectiveServerFactory ConnectiveServerFactory}</b><br />
  * <br />
  * <b>NOTE:</b> This class provides a CYAN component and will automatically
  * start the server if such implementation calls it!<br />
@@ -158,7 +159,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				Thread.sleep(10);
 			}
 		} catch (InterruptedException e) {
-			
+
 		}
 		return in.readNBytes(in.available());
 	}
@@ -414,7 +415,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		sockets.clear();
 		inStreams.clear();
 		outStreams.clear();
-		
+
 		socket = null;
 	}
 

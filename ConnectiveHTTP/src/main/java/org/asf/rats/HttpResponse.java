@@ -140,6 +140,12 @@ public class HttpResponse {
 
 		byte[] bytes = strm.toByteArray();
 		strm.close();
+		
+		if (body != null) {
+			body.close();
+			body = null;
+		}
+		
 		return bytes;
 	}
 

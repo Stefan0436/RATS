@@ -57,8 +57,8 @@ public class DispatchPacketProcessor extends ServicePacketProcessor<EventDispatc
 				if (prov instanceof ISyntaxSensitivePromotedEvent) {
 					boolean incorrectSyntax = false;
 					ISyntaxSensitivePromotedEvent sProv = (ISyntaxSensitivePromotedEvent) prov;
-					if (params.size() - 1 < sProv.minimalParameterCount()
-							|| params.size() - 1 > sProv.maximalParameterCount()) {
+					if (params.size() - 1 < sProv.minimalParameterCount() || (sProv.maximalParameterCount() != -1
+							&& params.size() - 1 > sProv.maximalParameterCount())) {
 						incorrectSyntax = true;
 					} else {
 						Class<?>[] classes = sProv.parameterTypes();
@@ -99,8 +99,8 @@ public class DispatchPacketProcessor extends ServicePacketProcessor<EventDispatc
 						for (StackTraceElement element : e.getStackTrace()) {
 							stack.append("\tat ").append(element).append(System.lineSeparator());
 						}
-						netLogger.error("Dispatch failed!\nException: " + e.getClass().getTypeName() + ": " + e.getMessage()
-								+ "\n" + stack, "RATS-EVENT-MANAGER");
+						netLogger.error("Dispatch failed!\nException: " + e.getClass().getTypeName() + ": "
+								+ e.getMessage() + "\n" + stack, "RATS-EVENT-MANAGER");
 					}
 				}
 			}

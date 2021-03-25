@@ -12,12 +12,14 @@
 earlyClasses> {
     org.asf.rats.Memory> ':org.asf.rats.Memory'
     org.asf.rats.logging.RatsLoggerBindings> ':org.asf.rats.logging.RatsLoggerBindings'
+    org.asf.rats.http.HttpServiceCoreModule> ':org.asf.rats.http.HttpServiceModule'
 }
 
 # Map of known classes
 # Format: (class)> '(source)'
 # Using ':<class>[/<path>]' allows for the use of class locations. 
 classes> {
+    org.asf.rats.http.HttpServiceModule> ':org.asf.rats.http.HttpServiceModule'
     org.asf.rats.service.clientmanager.ClientManagerConnectedProcessor> ':org.asf.rats.service.clientmanager.ClientManagerConnectedProcessor'
     org.asf.rats.service.clientmanager.ClientManagerDisconnectedProcessor> ':org.asf.rats.service.clientmanager.ClientManagerDisconnectedProcessor'
     org.asf.rats.service.clientmanager.RatsClientManager> ':org.asf.rats.service.clientmanager.RatsClientManager'
@@ -30,4 +32,5 @@ classes> {
     org.asf.rats.components.ComponentConfiguration> ':org.asf.rats.components.RatsComponents'
     org.asf.rats.events.RatsEventBusComponent> ':org.asf.rats.events.RatsEventBusComponent'
     org.asf.rats.events.HelpEvent> ':org.asf.rats.events.HelpEvent'
+    org.asf.rats.http.BasicFileModule> ':org.asf.rats.http.BasicFileModule'
 }

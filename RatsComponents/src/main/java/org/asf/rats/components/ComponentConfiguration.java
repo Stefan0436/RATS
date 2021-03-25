@@ -32,8 +32,13 @@ import org.asf.cyan.api.config.annotations.Comment;
 @Comment("Supertypes and interfaces will also be recognized.")
 public class ComponentConfiguration extends Configuration<ComponentConfiguration> {
 
+	private static ComponentConfiguration instance;
 	private URLClassLoader loader;
 	private ArrayList<Class<?>> classCache = new ArrayList<Class<?>>();
+
+	public static ComponentConfiguration getInstance() {
+		return instance;
+	}
 
 	@Override
 	public String filename() {
@@ -86,6 +91,10 @@ public class ComponentConfiguration extends Configuration<ComponentConfiguration
 				source += pathSuffix;
 			}
 			try {
+				if (!source.startsWith("/")) {
+					source = (System.getProperty("rats.config.dir") == null ? baseDir
+							: System.getProperty("rats.config.dir")) + "/" + source;
+				}
 				urls.add(new File(source).toURI().toURL());
 			} catch (MalformedURLException e) {
 			}
@@ -110,6 +119,10 @@ public class ComponentConfiguration extends Configuration<ComponentConfiguration
 				source += pathSuffix;
 			}
 			try {
+				if (!source.startsWith("/")) {
+					source = (System.getProperty("rats.config.dir") == null ? baseDir
+							: System.getProperty("rats.config.dir")) + "/" + source;
+				}
 				urls.add(new File(source).toURI().toURL());
 			} catch (MalformedURLException e) {
 			}
@@ -139,6 +152,8 @@ public class ComponentConfiguration extends Configuration<ComponentConfiguration
 
 	public ComponentConfiguration() {
 		super(System.getProperty("rats.config.dir") == null ? baseDir : System.getProperty("rats.config.dir"));
+
+		instance = this;
 		if (!exists()) {
 			InputStream strm = getClass().getResourceAsStream("/components.ccfg");
 			Scanner sc = new Scanner(strm);

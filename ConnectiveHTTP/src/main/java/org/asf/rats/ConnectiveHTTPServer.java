@@ -414,6 +414,8 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		sockets.clear();
 		inStreams.clear();
 		outStreams.clear();
+		
+		socket = null;
 	}
 
 	/**

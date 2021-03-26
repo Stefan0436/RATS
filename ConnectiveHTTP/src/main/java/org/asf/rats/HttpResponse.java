@@ -1,9 +1,9 @@
 package org.asf.rats;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,7 +25,7 @@ public class HttpResponse {
 
 	public int status = 200;
 	public String message = "OK";
-	public InputStream body;
+	public InputStream body = null;
 
 	public HttpResponse(int status, String message, HttpRequest input) {
 		this.input = input;
@@ -37,8 +37,17 @@ public class HttpResponse {
 		this.input = input;
 	}
 
+	/**
+	 * Sets the content to a body string
+	 * 
+	 * @param type Content type.
+	 * @param body Content body.
+	 */
 	public HttpResponse setContent(String type, String body) {
-		headers.put("Content-Type", type);
+		if (type != null)
+			headers.put("Content-Type", type);
+		else if (headers.containsKey("Content-Type"))
+			headers.remove("Content-Type");
 
 		if (this.body != null) {
 			try {
@@ -47,13 +56,25 @@ public class HttpResponse {
 			}
 		}
 
+		if (body == null) {
+			this.body = null;
+			return this;
+		}
+
 		this.body = new ByteArrayInputStream(body.getBytes());
 		return this;
 	}
 
+	/**
+	 * Sets the body of the response. (sets Content-Disposition to attachment)
+	 * 
+	 * @param type Content type.
+	 * @param body Input bytes.
+	 */
 	public HttpResponse setContent(String type, byte[] body) {
-		headers.put("Content-Disposition", "attachment");
 		headers.put("Content-Type", type);
+		headers.put("Content-Disposition", "attachment");
+		headers.put("Content-Length", Integer.toString(body.length));
 
 		if (this.body != null) {
 			try {
@@ -66,8 +87,13 @@ public class HttpResponse {
 		return this;
 	}
 
+	/**
+	 * Sets the body of the response, WARNING: the stream gets closed on build.
+	 * 
+	 * @param type Content type.
+	 * @param body Input stream.
+	 */
 	public HttpResponse setContent(String type, InputStream body) {
-		headers.put("Content-Disposition", "attachment");
 		headers.put("Content-Type", type);
 
 		if (this.body != null) {
@@ -106,22 +132,14 @@ public class HttpResponse {
 	/**
 	 * Builds the HTTP response
 	 * 
+	 * @param output Output stream to write to.
 	 * @throws IOException If building fails
 	 */
-	public byte[] build() throws IOException {
+	public void build(OutputStream output) throws IOException {
 		StringBuilder resp = new StringBuilder();
 		resp.append(input.version).append(" ");
 		resp.append(status).append(" ");
 		resp.append(message);
-
-		ByteArrayOutputStream strm = new ByteArrayOutputStream();
-		ByteArrayOutputStream intermediary = null;
-
-		if (body != null) {
-			intermediary = new ByteArrayOutputStream();
-			long length = body.transferTo(intermediary);
-			headers.put("Content-Length", Long.toString(length));
-		}
 
 		headers.forEach((k, v) -> {
 			resp.append("\r\n");
@@ -129,24 +147,17 @@ public class HttpResponse {
 			resp.append(v);
 		});
 
-		resp.append("\r\n");
-		resp.append("\r\n");
-		if (intermediary != null) {
-			strm.write(resp.toString().getBytes());
-			strm.write(intermediary.toByteArray());
-		} else {
-			strm.write(resp.toString().getBytes());
-		}
-
-		byte[] bytes = strm.toByteArray();
-		strm.close();
-		
 		if (body != null) {
+			resp.append("\r\n");
+			resp.append("\r\n");
+			output.write(resp.toString().getBytes());
+
+			body.transferTo(output);
 			body.close();
 			body = null;
+		} else {
+			output.write(resp.toString().getBytes());
 		}
-		
-		return bytes;
 	}
 
 	// Adapted from SO answer: https://stackoverflow.com/a/8642463

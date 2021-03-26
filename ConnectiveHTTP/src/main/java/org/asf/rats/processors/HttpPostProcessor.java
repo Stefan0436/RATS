@@ -1,5 +1,6 @@
 package org.asf.rats.processors;
 
+import java.io.InputStream;
 import java.net.Socket;
 
 import org.asf.rats.ConnectiveHTTPServer;
@@ -16,7 +17,23 @@ public abstract class HttpPostProcessor extends HttpGetProcessor {
 
 	@Override
 	public void process(Socket client) {
-		process(null, null, client);
+		process(null, client);
+	}
+	
+	/**
+	 * Retrieves the body text of the post request.
+	 * @return Body text.
+	 */
+	protected String getBody() {
+		return getRequest().getBody();
+	}
+
+	/**
+	 * Retrieves the body input stream. (unusable if getBody was called)
+	 * @return Body input stream.
+	 */
+	protected InputStream getBodyStream() {
+		return getRequest().getBodyStream();
 	}
 
 	/**
@@ -44,10 +61,9 @@ public abstract class HttpPostProcessor extends HttpGetProcessor {
 	 * used.
 	 * 
 	 * @param contentType Content type
-	 * @param body        Post body
 	 * @param client      Client used to contact the server.
 	 */
-	public abstract void process(String contentType, String body, Socket client);
+	public abstract void process(String contentType, Socket client);
 
 	/**
 	 * Creates an instance for processing HTTP requests.

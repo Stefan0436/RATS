@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+		body {
+			margin-top: -8px;
+		}
+		p {
+			line-height: 20px;
+		}
+		hr.ln {
+			border-top: 3px solid #bbb;
+		}
+		p {
+		    line-height: 0px;
+		}
+		</style>
+		<meta charset="UTF-8" />
+		<title>ERROR: %error-status%: %error-message%</title>
+		</head>
+	<body>
+		<h1 class="c">An error occured!</h1>
+		<hr class="ln" />
+		<p>
+			<h3>The following error was detected:</h3>
+			<ul>
+				<li>%error-status%: %error-message%</li>
+			</ul>
+		</p>
+		<br />
+		<div class="maindiv">
+			<p>
+				<h4>Now will follow details about the error and server.</h4>
+				<ul>
+					<li><b>Requested path:</b> %path%</li>
+					<li><b>Server name:</b> %server-name%</li>
+					<li><b>Server version:</b> %server-version%</li>
+				</ul>
+			</p>
+			<br />
+			<p>
+				<h4>What you can try:</h4>
+				<ul>
+					<li><b>If the error ranges between 400 and 500:</b> check your request and try again.</li>
+					<li><b>If the error is 5xx:</b> As user, you are out of luck, this is a server error.</li>
+					<li><b>For admins/developers:</b> The error goes as following: <u><b>%error-message%</b></u>, you can try to go to the log for more information.</li>
+					<li><b>For developers:</b> If the message is 'Command not found', it means you have not properly registered the processor, make sure you are assigning it to the right server instance.</li>
+				</ul>
+			</p>
+			<br />
+			<p>
+				<h4>Developers: Configuring this page:</h4>
+				<ul>
+					<li>If you are a developer of this server and have access to the RaTs! <u>Memory</u>, you can rewrite this page.</li>
+					<li>To do so, you need to assign the 'connective.http.gen.error.provider' memory entry before the server starts, best way to do so is a <u>coremodule</u>.</li>
+					<li>The 'connective.http.gen.error.provider' entry is a BiFunction returning a <u>String</u>, the parameters are the <u>HttpResponse</u> object and the <u>HttpRequest</u> object.</li>
+				</ul>
+			</p>
+		</div>
+		<br />
+		<br />
+	</body>
+</html>

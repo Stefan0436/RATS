@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.function.BiFunction;
 
 import org.asf.cyan.api.common.CYAN_COMPONENT;
 import org.asf.cyan.api.common.CyanComponent;
@@ -18,7 +19,8 @@ import org.asf.rats.processors.IAutoRegisterProcessor;
 /**
  * 
  * ConnectiveHTTP Server, HTTP Server API. <b>Avoid direct construction, use the
- * factory instead: {@link ConnectiveServerFactory ConnectiveServerFactory}</b><br />
+ * factory instead: {@link ConnectiveServerFactory
+ * ConnectiveServerFactory}</b><br />
  * <br />
  * <b>NOTE:</b> This class provides a CYAN component and will automatically
  * start the server if such implementation calls it!<br />
@@ -37,7 +39,7 @@ import org.asf.rats.processors.IAutoRegisterProcessor;
 public class ConnectiveHTTPServer extends CyanComponent {
 
 	protected String name = "ASF Connective";
-	protected String version = "1.0.0.A1";
+	protected String version = "1.0.0.A2";
 
 	protected boolean connected = false;
 	protected ServerSocket socket = null;
@@ -63,15 +65,17 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				Thread clientProcessor = new Thread(() -> {
 
 					try {
-						HttpRequest msg = HttpRequest.parse(readStreamForRequest(in));
+						HttpRequest msg = HttpRequest.parse(in);
 						if (msg == null) {
 							HttpRequest dummy = new HttpRequest();
 							dummy.version = "HTTP/1.1";
 
 							closeConnection(dummy, 503, "Unsupported request", client);
+							dummy.close();
 						} else {
 							processRequest(client, msg);
 						}
+						msg.close();
 					} catch (IOException ex) {
 					}
 
@@ -150,9 +154,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		return client.getInputStream();
 	}
 
-	/**
-	 * Reads the client input stream bytes. (for http request generation)
-	 */
+	@Deprecated
 	protected byte[] readStreamForRequest(InputStream in) throws IOException {
 		try {
 			while (in.available() == 0) {
@@ -168,13 +170,6 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	 * Called on client connect, potential override.
 	 */
 	protected void acceptConnection(Socket client) {
-	}
-
-	/**
-	 * Called to write to the client output (override only)
-	 */
-	protected void clientOutWrite(OutputStream strm, byte[] content) throws IOException {
-		strm.write(content);
 	}
 
 	/**
@@ -245,7 +240,8 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			}
 			if (compatible) {
 				HttpPostProcessor processor = impl.instanciate(this, msg);
-				processor.process(msg.headers.get("Content-Type"), msg.body, client);
+				processor.process((msg.headers.get("Content-Type") == null ? msg.headers.get("Content-type")
+						: msg.headers.get("Content-Type")), client);
 				closeConnection(processor.getResponse(), client);
 			}
 		} else {
@@ -315,7 +311,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	 * @throws IOException If transmitting the response fails
 	 */
 	public synchronized HttpResponse closeConnection(HttpResponse response, Socket client) throws IOException {
-		clientOutWrite(outStreams.get(client), response.addDefaultHeaders(this).setConnectionState("Closed").build());
+		response.addDefaultHeaders(this).setConnectionState("Closed").build(outStreams.get(client));
 		closeConnection(client);
 		return response;
 	}
@@ -349,6 +345,49 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	/**
+	 * Generates an error html (bifunction connective.http.gen.error.provider is
+	 * called with response and request as parameters)
+	 * 
+	 * @param response HTTP Response to use
+	 * @return HTML String
+	 */
+	@SuppressWarnings("unchecked")
+	public String genError(HttpResponse response, HttpRequest request) {
+		if (Memory.getInstance().getOrCreate("connective.http.gen.error.provider").getValue(BiFunction.class) == null) {
+			Memory.getInstance().getOrCreate("connective.http.gen.error.provider")
+					.assign(new BiFunction<HttpResponse, HttpRequest, String>() {
+
+						protected String htmlCache = null;
+
+						@Override
+						public String apply(HttpResponse response, HttpRequest request) {
+							try {
+								InputStream strm = getClass().getResource("/error.template.html").openStream();
+								htmlCache = new String(strm.readAllBytes());
+							} catch (Exception ex) {
+								if (htmlCache == null)
+									return "FATAL ERROR GENERATING PAGE: " + ex.getClass().getTypeName() + ": "
+											+ ex.getMessage();
+							}
+
+							String str = htmlCache;
+
+							str = str.replaceAll("\\%path\\%", request.path);
+							str = str.replaceAll("\\%server-name\\%", getName());
+							str = str.replaceAll("\\%server-version\\%", getVersion());
+							str = str.replaceAll("\\%error-status\\%", Integer.toString(response.status));
+							str = str.replaceAll("\\%error-message\\%", response.message);
+
+							return str;
+						}
+
+					});
+		}
+		return Memory.getInstance().getOrCreate("connective.http.gen.error.provider").getValue(BiFunction.class)
+				.apply(response, request).toString();
+	}
+
+	/**
 	 * Closes a client connection
 	 * 
 	 * @param request The request used
@@ -361,7 +400,12 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	public synchronized HttpResponse closeConnection(HttpRequest request, int status, String message, Socket client)
 			throws IOException {
 		HttpResponse resp = new HttpResponse(status, message, request);
-		clientOutWrite(outStreams.get(client), resp.addDefaultHeaders(this).setConnectionState("Closed").build());
+		
+		if (resp.body == null) {
+			resp.setContent("text/html", genError(resp, request));
+		}
+		
+		resp.addDefaultHeaders(this).setConnectionState("Closed").build(outStreams.get(client));
 		closeConnection(client);
 		return resp;
 	}

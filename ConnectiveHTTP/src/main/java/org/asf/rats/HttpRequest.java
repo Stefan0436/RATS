@@ -1,5 +1,7 @@
 package org.asf.rats;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -17,73 +19,115 @@ public class HttpRequest {
 	public String path = "";
 	public String method = "";
 	public String version = "";
-	public String body = "";
+
+	@Deprecated
+	public String body = null;
+	protected InputStream bodyStream = null;
+
 	public String query = "";
 
 	/**
 	 * Parses a request into a new HttpMessage object.
 	 * 
-	 * @param request Request bytes
+	 * @param request Request stream
 	 * @return HttpMessage representing the request.
+	 * @throws IOException If reading fails.
 	 */
-	public static HttpRequest parse(byte[] request) {
-		String requestMsg = new String(request);
-		if (!requestMsg.substring(0, 1).matches("[A-Za-z0-9]")) {
+	public static HttpRequest parse(InputStream request) throws IOException {
+		String firstLine = readStreamLine(request);
+
+		if (!firstLine.substring(0, 1).matches("[A-Za-z0-9]")) {
 			return null;
 		}
-		HttpRequest msg = new HttpRequest();
 
-		int ln = 0;
-		boolean first = true;
-		for (String line : requestMsg.replaceAll("\r", "").split("\n")) {
+		HttpRequest msg = new HttpRequest();
+		String[] mainHeader = firstLine.split(" ");
+		URI req;
+		try {
+			req = new URI(mainHeader[1]);
+			msg.path = req.getPath();
+			msg.query = req.getQuery();
+		} catch (URISyntaxException e) {
+			msg.path = mainHeader[1];
+		}
+		msg.method = mainHeader[0];
+		msg.version = mainHeader[2];
+
+		while (true) {
+			String line = readStreamLine(request);
 			if (line.equals(""))
 				break;
 
-			if (first) {
-				first = false;
-				String[] mainHeader = line.split(" ");
-				URI req;
-				try {
-					req = new URI(mainHeader[1]);
-					msg.path = req.getPath();
-					msg.query = req.getQuery();
-				} catch (URISyntaxException e) {
-					msg.path = mainHeader[1];
-				}
-				msg.method = mainHeader[0];
-				msg.version = mainHeader[2];
-			} else {
-				String key = line.substring(0, line.indexOf(": "));
-				String value = line.substring(line.indexOf(": ") + 2);
-				msg.headers.put(key, value);
-			}
-			ln++;
+			String key = line.substring(0, line.indexOf(": "));
+			String value = line.substring(line.indexOf(": ") + 2);
+			msg.headers.put(key, value);
 		}
 
-		if (msg.headers.containsKey("Content-Length")) {
-			int l = 0;
-			long length = Long.valueOf(msg.headers.get("Content-Length"));
-
-			StringBuilder builder = new StringBuilder();
-			ln++;
-
-			int index = 0;
-			for (char ch : requestMsg.toCharArray()) {
-				if (ch == '\n' && l != ln) {
-					l++;
-				} else if (l == ln) {
-					builder.append(ch);
-				}
-
-				if (index == length)
-					break;
-				if (l == ln)
-					index++;
-			}
-
-			msg.body = builder.toString();
+		if (msg.method.equals("POST")) {
+			msg.bodyStream = request;
 		}
 
 		return msg;
+	}
+
+	/**
+	 * Reads a single line from an inputstream
+	 * 
+	 * @param strm Stream to read from.
+	 * @return String representing the line read.
+	 * @throws IOException If reading fails.
+	 */
+	protected static String readStreamLine(InputStream strm) throws IOException {
+		String buffer = "";
+		while (true) {
+			char ch = (char) strm.read();
+			if (ch == '\n') {
+				return buffer;
+			} else if (ch != '\r') {
+				buffer += ch;
+			}
+		}
+	}
+
+	public void close() throws IOException {
+		if (bodyStream != null) {
+			bodyStream.close();
+		}
+	}
+
+	public boolean isBinaryMode() {
+		return (headers.containsKey("Content-Disposition") && headers.get("Content-Disposition").equals("attachment"))
+				|| (headers.containsKey("Content-Type")
+						&& headers.get("Content-Type").equals("application/octet-stream"));
+	}
+
+	/**
+	 * Returns the post body stream, null if not a post request.
+	 * 
+	 * @return Body InputStream or null.
+	 */
+	public InputStream getBodyStream() {
+		return bodyStream;
+	}
+
+	/**
+	 * Returns the post body in string format. <b>WARNING:</b> leaves the body
+	 * stream in a useless state!
+	 * 
+	 * @return String representing the body.
+	 */
+	public String getBody() {
+		if (bodyStream != null) {
+			if (body == null) {
+				try {
+					body = new String(bodyStream.readNBytes(bodyStream.available()));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			return body;
+		} else {
+			return null;
+		}
 	}
 }

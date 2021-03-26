@@ -36,9 +36,9 @@ public class ConnectiveServerTest {
 		}
 
 		@Override
-		public void process(String contentType, String body, Socket client) {
-			if (body != null)
-				setBody(body + "-test");
+		public void process(String contentType, Socket client) {
+			if (contentType != null)
+				setBody(getBody() + "-test");
 			else {
 				setBody("12345");
 			}

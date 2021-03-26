@@ -13,7 +13,7 @@ public class DefaultIndexPage extends IndexPageProvider {
 	public void process(Socket client, File[] directories, File[] files) {
 		try {
 			InputStream strm = getClass().getResource("/index.template.html").openStream();
-			setBody("text/html", process(new String(strm.readAllBytes()), getRequest().path,
+			setBody("text/html", process(new String(strm.readAllBytes()), getFolderPath(),
 					new File(getFolderPath()).getName(), null, directories, files));
 		} catch (IOException e) {
 		}

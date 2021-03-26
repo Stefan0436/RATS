@@ -153,6 +153,8 @@ public class MainFileProcessor extends HttpPostProcessor {
 					return;
 				}
 			}
+			
+			this.setResponse(file.getRewrittenResponse());
 
 			for (IFileExtensionProvider provider : context.getExtensions()) {
 				if (sourceFile.getName().endsWith(provider.fileExtension())) {

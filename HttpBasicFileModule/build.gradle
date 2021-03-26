@@ -61,6 +61,7 @@ dependencies {
 	testImplementation 'junit:junit:4.12'
 
 	implementation project(":ConnectiveHTTP")
+	implementation project(':RatsMemory')
 	
 	implementation group: 'javax.activation', name: 'activation', version: '1.1.1'
 	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'

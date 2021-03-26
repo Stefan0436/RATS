@@ -82,7 +82,8 @@ public class ConnectiveHTTPServer extends CyanComponent {
 						msg.close();
 					} catch (IOException ex) {
 						if (!connected || ex instanceof SSLHandshakeException
-								|| (ex instanceof SocketException && ex.getMessage().equals("Broken pipe")))
+								|| (ex instanceof SocketException && (ex.getMessage().equals("Broken pipe")
+										|| ex.getMessage().equals("Connection reset by peer"))))
 							return;
 
 						error("Failed to process request", ex);

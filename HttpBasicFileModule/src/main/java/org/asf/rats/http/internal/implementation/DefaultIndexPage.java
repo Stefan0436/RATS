@@ -12,9 +12,13 @@ public class DefaultIndexPage extends IndexPageProvider {
 	@Override
 	public void process(Socket client, File[] directories, File[] files) {
 		try {
+			String path = getFolderPath();
+			if (!path.startsWith("/"))
+				path = "/" + path;
+
 			InputStream strm = getClass().getResource("/index.template.html").openStream();
-			setBody("text/html", process(new String(strm.readAllBytes()), getFolderPath(),
-					new File(getFolderPath()).getName(), null, directories, files));
+			setBody("text/html", process(new String(strm.readAllBytes()), path, new File(getFolderPath()).getName(),
+					null, directories, files));
 		} catch (IOException e) {
 		}
 	}
@@ -23,7 +27,7 @@ public class DefaultIndexPage extends IndexPageProvider {
 		if (!path.endsWith("/")) {
 			path += "/";
 		}
-		
+
 		if (data != null) {
 			str = str.replaceAll("\\%c-name\\%", name);
 			str = str.replaceAll("\\%c-path\\%", path);
@@ -135,8 +139,13 @@ public class DefaultIndexPage extends IndexPageProvider {
 				}
 			}
 		}
-		
+
+		String prettyPath = path;
+		if (prettyPath.endsWith("/"))
+			prettyPath = prettyPath.substring(0, prettyPath.length() - 1);
+
 		str = str.replaceAll("\\%path\\%", path);
+		str = str.replaceAll("\\%path-pretty\\%", prettyPath);
 		str = str.replaceAll("\\%name\\%", name);
 		str = str.replaceAll("\\%up-path\\%", (path.equals("/") || path.isEmpty()) ? "" : new File(path).getParent());
 		str = str.replaceAll("\\%server-name\\%", getServer().getName());

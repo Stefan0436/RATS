@@ -74,6 +74,8 @@ public class MainFileProcessor extends HttpPostProcessor {
 					strm = new FileInputStream(sourceFile);
 					file = FileContext.create(getResponse(),
 							MainFileMap.getInstance().getContentType(sourceFile.getName()), strm);
+					
+					getResponse().body = strm;
 				}
 			} catch (FileNotFoundException e) {
 				setResponseCode(404);

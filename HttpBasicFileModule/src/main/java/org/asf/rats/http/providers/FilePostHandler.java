@@ -65,7 +65,7 @@ public abstract class FilePostHandler {
 	 * Checks if the handler is compatible.
 	 * 
 	 * @param request HTTP Request.
-	 * @param input   Input path.
+	 * @param path   Input path.
 	 * @return True if compatible, false otherwise.
 	 */
 	public abstract boolean match(HttpRequest request, String path);

@@ -20,6 +20,10 @@ public class DefaultIndexPage extends IndexPageProvider {
 	}
 
 	private String process(String str, String path, String name, File data, File[] directories, File[] files) {
+		if (!path.endsWith("/")) {
+			path += "/";
+		}
+		
 		if (data != null) {
 			str = str.replaceAll("\\%c-name\\%", name);
 			str = str.replaceAll("\\%c-path\\%", path);
@@ -63,7 +67,7 @@ public class DefaultIndexPage extends IndexPageProvider {
 								template = buffer;
 								buffer = buffer.substring(
 										"<%%PROCESS:FILES:$".length() + System.lineSeparator().length(),
-										buffer.length() - 3);
+										buffer.length() - 4);
 
 								StringBuilder strs = new StringBuilder();
 								for (File f : files) {
@@ -115,7 +119,7 @@ public class DefaultIndexPage extends IndexPageProvider {
 								template = buffer;
 								buffer = buffer.substring(
 										"<%%PROCESS:DIRECTORIES:$".length() + System.lineSeparator().length(),
-										buffer.length() - 3);
+										buffer.length() - 4);
 
 								StringBuilder strs = new StringBuilder();
 								for (File f : directories) {
@@ -131,10 +135,10 @@ public class DefaultIndexPage extends IndexPageProvider {
 				}
 			}
 		}
-
+		
 		str = str.replaceAll("\\%path\\%", path);
 		str = str.replaceAll("\\%name\\%", name);
-		str = str.replaceAll("\\%up-path\\%", new File(path).getParent());
+		str = str.replaceAll("\\%up-path\\%", (path.equals("/") || path.isEmpty()) ? "" : new File(path).getParent());
 		str = str.replaceAll("\\%server-name\\%", getServer().getName());
 		str = str.replaceAll("\\%server-version\\%", getServer().getVersion());
 

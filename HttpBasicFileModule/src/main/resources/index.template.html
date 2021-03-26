@@ -55,28 +55,33 @@
 		<title>Index of %path%</title>
 	</head>
 	<body>
-		<h1 class="c">Listing HTTP Server Directory
+		<h1 class="c">Listing HTTP Server Directory</h1>
 		<hr class="ln" />
-		</h1>
 		<table id="index">
 		  	<tr>
 		    	<th>Listing Directory: %path%</th>
 		 	</tr>
 		  	<tr>
-				<td>📁 <a href="%up-path%" >..</a></td>
+				<td>
+					📁 <a href="%up-path%" >..</a>
+				</td>
 		  	</tr>
 <%%PROCESS:DIRECTORIES:$
 		  	<tr>
-				<td>📁 <a href="%path%/%c-name%" >%c-name%</a></td>
+				<td>
+					📁 <a href="%path%%c-name%">%c-name%</a>
+				</td>
 		  	</tr>
 %%>
 <%%PROCESS:FILES:$
-			<tr>
-				<td>📄 <a href="%path%/%c-name%" >%c-name%</a></td>
-			</tr>
+				<tr>
+					<td>
+						📄 <a href="%path%%c-name%">%c-name%</a>
+					</td>
+				</tr>
 %%>
-			</table>
-			<br />
-			<br />
+		</table>
+		<br />
+		<br />
 	</body>
 </html>

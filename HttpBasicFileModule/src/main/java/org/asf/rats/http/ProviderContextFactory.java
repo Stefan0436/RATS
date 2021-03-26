@@ -263,7 +263,7 @@ public class ProviderContextFactory {
 	 * Adds a map of index pages to the context
 	 */
 	public void addIndexPages(Map<String, IndexPageProvider> altIndexPages) {
-		altIndexPages.putAll(altIndexPages);
+		this.altIndexPages.putAll(altIndexPages);
 	}
 
 }

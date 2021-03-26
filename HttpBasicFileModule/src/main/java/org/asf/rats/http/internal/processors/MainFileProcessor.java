@@ -8,10 +8,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.activation.MimetypesFileTypeMap;
-
 import org.asf.rats.HttpResponse;
 import org.asf.rats.http.FileContext;
+import org.asf.rats.http.MainFileMap;
 import org.asf.rats.http.ProviderContext;
 import org.asf.rats.http.providers.FilePostHandler;
 import org.asf.rats.http.providers.IFileAlias;
@@ -36,17 +35,19 @@ public class MainFileProcessor extends HttpPostProcessor {
 	}
 
 	@Override
-	public void process(String contentType, String body, Socket client) {
+	public void process(String contentType, Socket client) {
 		String path = getRequestPath().substring(path().length());
 
 		if (path.startsWith("..")) {
 			setResponseCode(403);
 			setResponseMessage("Access to parent directories denied");
+			setBody("text/html", getError());
 		} else {
 			for (IFileRestrictionProvider restriction : context.getRestrictions()) {
 				if (!restriction.checkRestriction(path, getRequest())) {
 					setResponseCode(403);
 					setResponseMessage("Access denied");
+					setBody("text/html", getError());
 					return;
 				}
 			}
@@ -62,6 +63,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 			if (!sourceFile.exists()) {
 				setResponseCode(404);
 				setResponseMessage("File not found");
+				setBody("text/html", getError());
 				return;
 			}
 
@@ -71,11 +73,12 @@ public class MainFileProcessor extends HttpPostProcessor {
 				if (!sourceFile.isDirectory()) {
 					strm = new FileInputStream(sourceFile);
 					file = FileContext.create(getResponse(),
-							MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(sourceFile.getName()), strm);
+							MainFileMap.getInstance().getContentType(sourceFile.getName()), strm);
 				}
 			} catch (FileNotFoundException e) {
 				setResponseCode(404);
 				setResponseMessage("File not found");
+				setBody("text/html", getError());
 				return;
 			}
 
@@ -88,6 +91,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 						if (context.getDefaultIndexPage() == null) {
 							setResponseCode(404);
 							setResponseMessage("File not found");
+							setBody("text/html", getError());
 						} else {
 							setResponseCode(300);
 							execPage(context.getDefaultIndexPage(), sourceFile, path, client);
@@ -117,6 +121,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 						if (context.getDefaultIndexPage() == null) {
 							setResponseCode(404);
 							setResponseMessage("File not found");
+							setBody("text/html", getError());
 						} else {
 							setResponseCode(300);
 							execPage(context.getDefaultIndexPage(), sourceFile, path, client);
@@ -131,7 +136,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 						HttpResponse response = file.getRewrittenResponse();
 
 						FilePostHandler inst = handler.instanciate(getServer(), getRequest(), response, path);
-						inst.process(contentType, body, client);
+						inst.process(contentType, client);
 
 						file = FileContext.create(response, path, response.body);
 
@@ -140,8 +145,9 @@ public class MainFileProcessor extends HttpPostProcessor {
 					}
 				}
 				if (!found) {
-					setResponseCode(415);
+					setResponseCode(403);
 					setResponseMessage("POST not supported");
+					setBody("text/html", getError());
 					return;
 				}
 			}
@@ -155,6 +161,10 @@ public class MainFileProcessor extends HttpPostProcessor {
 
 			this.setResponse(file.getRewrittenResponse());
 		}
+	}
+
+	private String getError() {
+		return getServer().genError(getResponse(), getRequest());
 	}
 
 	private void execPage(IndexPageProvider page, File sourceFile, String path, Socket client) {

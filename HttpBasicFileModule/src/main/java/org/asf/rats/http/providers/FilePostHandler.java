@@ -41,6 +41,22 @@ public abstract class FilePostHandler {
 	}
 
 	/**
+	 * Retrieves the body text of the post request.
+	 * @return Body text.
+	 */
+	protected String getBody() {
+		return getRequest().getBody();
+	}
+
+	/**
+	 * Retrieves the body input stream. (unusable if getBody was called)
+	 * @return Body input stream.
+	 */
+	protected InputStream getBodyStream() {
+		return getRequest().getBodyStream();
+	}
+
+	/**
 	 * Creates a new instance of this handler
 	 */
 	protected abstract FilePostHandler newInstance();
@@ -58,10 +74,9 @@ public abstract class FilePostHandler {
 	 * Processes the post request.
 	 * 
 	 * @param contentType Content type.
-	 * @param body        Content body.
 	 * @param client      Client sending the request.
 	 */
-	public abstract void process(String contentType, String body, Socket client);
+	public abstract void process(String contentType, Socket client);
 
 	/**
 	 * Gets the REAL file path (relative to the root source directory on disk)

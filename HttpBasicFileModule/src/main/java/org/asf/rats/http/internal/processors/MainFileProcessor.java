@@ -17,6 +17,7 @@ import org.asf.rats.http.providers.IContextProviderExtension;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
+import org.asf.rats.http.providers.IPathProviderExtension;
 import org.asf.rats.http.providers.IServerProviderExtension;
 import org.asf.rats.http.providers.IndexPageProvider;
 import org.asf.rats.processors.HttpPostProcessor;
@@ -169,6 +170,14 @@ public class MainFileProcessor extends HttpPostProcessor {
 			}
 
 			for (IFileExtensionProvider provider : context.getExtensions()) {
+				if (provider instanceof IPathProviderExtension) {
+					String pth = path;
+					if (pth.endsWith("/"))
+						pth = pth.substring(0, pth.length() - 1);
+					if (!pth.startsWith("/"))
+						pth = "/" + pth;
+					((IPathProviderExtension)provider).provide(pth);
+				}
 				if (provider instanceof IContextProviderExtension) {
 					((IContextProviderExtension) provider).provide(context);
 				}

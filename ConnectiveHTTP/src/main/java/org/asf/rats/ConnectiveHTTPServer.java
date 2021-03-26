@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.BiFunction;
 
+import javax.net.ssl.SSLHandshakeException;
+
 import org.asf.cyan.api.common.CYAN_COMPONENT;
 import org.asf.cyan.api.common.CyanComponent;
 import org.asf.rats.processors.HttpGetProcessor;
@@ -64,8 +66,9 @@ public class ConnectiveHTTPServer extends CyanComponent {
 
 				Thread clientProcessor = new Thread(() -> {
 
+					HttpRequest msg = null;
 					try {
-						HttpRequest msg = HttpRequest.parse(in);
+						msg = HttpRequest.parse(in);
 						if (msg == null) {
 							HttpRequest dummy = new HttpRequest();
 							dummy.version = "HTTP/1.1";
@@ -77,6 +80,18 @@ public class ConnectiveHTTPServer extends CyanComponent {
 						}
 						msg.close();
 					} catch (IOException ex) {
+						if (!connected || ex instanceof SSLHandshakeException)
+							return;
+
+						error("Failed to process request", ex);
+						try {
+							if (msg == null) {
+								msg = new HttpRequest();
+								msg.version = "HTTP/1.1";
+							}
+							closeConnection(msg, 503, "Internal server error", client);
+						} catch (IOException ex2) {
+						}
 					}
 
 				}, "Client processor (" + client.getInetAddress().toString() + ":" + client.getPort() + ")");
@@ -400,11 +415,11 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	public synchronized HttpResponse closeConnection(HttpRequest request, int status, String message, Socket client)
 			throws IOException {
 		HttpResponse resp = new HttpResponse(status, message, request);
-		
+
 		if (resp.body == null) {
 			resp.setContent("text/html", genError(resp, request));
 		}
-		
+
 		resp.addDefaultHeaders(this).setConnectionState("Closed").build(outStreams.get(client));
 		closeConnection(client);
 		return resp;

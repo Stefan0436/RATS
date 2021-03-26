@@ -133,7 +133,7 @@ public class HttpResponse {
 	 * Builds the HTTP response
 	 * 
 	 * @param output Output stream to write to.
-	 * @throws IOException If building fails
+	 * @throws IOException 
 	 */
 	public void build(OutputStream output) throws IOException {
 		StringBuilder resp = new StringBuilder();

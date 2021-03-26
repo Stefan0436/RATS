@@ -89,8 +89,6 @@ public class MainFileProcessor extends HttpPostProcessor {
 					strm = new FileInputStream(sourceFile);
 					file = FileContext.create(getResponse(),
 							MainFileMap.getInstance().getContentType(sourceFile.getName()), strm);
-
-					getResponse().body = strm;
 				}
 			} catch (FileNotFoundException e) {
 				setResponseCode(404);
@@ -176,7 +174,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 						pth = pth.substring(0, pth.length() - 1);
 					if (!pth.startsWith("/"))
 						pth = "/" + pth;
-					((IPathProviderExtension)provider).provide(pth);
+					((IPathProviderExtension) provider).provide(pth);
 				}
 				if (provider instanceof IContextProviderExtension) {
 					((IContextProviderExtension) provider).provide(context);
@@ -185,6 +183,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 					((IServerProviderExtension) provider).provide(getServer());
 				}
 				if (sourceFile.getName().endsWith(provider.fileExtension())) {
+					getResponse().body = strm;
 					file = provider.rewrite(getResponse(), getRequest());
 					break;
 				}

@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.BiFunction;
@@ -80,7 +81,8 @@ public class ConnectiveHTTPServer extends CyanComponent {
 						}
 						msg.close();
 					} catch (IOException ex) {
-						if (!connected || ex instanceof SSLHandshakeException)
+						if (!connected || ex instanceof SSLHandshakeException
+								|| (ex instanceof SocketException && ex.getMessage().equals("Broken pipe")))
 							return;
 
 						error("Failed to process request", ex);

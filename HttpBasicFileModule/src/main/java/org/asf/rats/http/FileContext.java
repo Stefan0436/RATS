@@ -50,6 +50,11 @@ public class FileContext {
 			}
 		}
 
+		if (response.headers.containsKey("Content-Type")
+				&& response.headers.get("Content-Type").equals("application/octet-stream")) {
+			response.headers.put("Content-Disposition", "attachment");
+		}
+
 		response.body = file;
 		return response;
 	}

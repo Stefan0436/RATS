@@ -152,7 +152,9 @@ public class HttpResponse {
 			resp.append("\r\n");
 			output.write(resp.toString().getBytes());
 
-			body.transferTo(output);
+			long v = body.transferTo(output);
+			this.headers.put("Content-Length", Long.toString(v));
+			
 			body.close();
 			body = null;
 		} else {

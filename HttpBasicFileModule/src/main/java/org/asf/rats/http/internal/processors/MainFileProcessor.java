@@ -75,7 +75,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 			}
 
 			File sourceFile = new File(context.getSourceDirectory(), path);
-			if (!sourceFile.exists()) {
+			if (!sourceFile.exists() && contentType == null) {
 				setResponseCode(404);
 				setResponseMessage("File not found");
 				setBody("text/html", getError());
@@ -91,10 +91,12 @@ public class MainFileProcessor extends HttpPostProcessor {
 							MainFileMap.getInstance().getContentType(sourceFile.getName()), strm);
 				}
 			} catch (FileNotFoundException e) {
-				setResponseCode(404);
-				setResponseMessage("File not found");
-				setBody("text/html", getError());
-				return;
+				if (contentType == null) {
+					setResponseCode(404);
+					setResponseMessage("File not found");
+					setBody("text/html", getError());
+					return;
+				}				
 			}
 
 			if (contentType == null) {
@@ -147,10 +149,21 @@ public class MainFileProcessor extends HttpPostProcessor {
 			} else {
 				boolean found = false;
 				for (FilePostHandler handler : context.getPostHandlers()) {
+					if (handler instanceof IContextProviderExtension) {
+						((IContextProviderExtension) handler).provide(context);
+					}
 					if (handler.match(getRequest(), path)) {
-						HttpResponse response = file.getRewrittenResponse();
+						HttpResponse response = (file != null ? file.getRewrittenResponse() : getResponse());
 
 						FilePostHandler inst = handler.instanciate(getServer(), getRequest(), response, path);
+						if (inst instanceof IPathProviderExtension) {
+							String pth = path;
+							if (pth.endsWith("/"))
+								pth = pth.substring(0, pth.length() - 1);
+							if (!pth.startsWith("/"))
+								pth = "/" + pth;
+							((IPathProviderExtension) inst).provide(pth);
+						}
 						inst.process(contentType, client);
 
 						file = FileContext.create(response, path, response.body);
@@ -190,6 +203,9 @@ public class MainFileProcessor extends HttpPostProcessor {
 			}
 
 			this.setResponse(file.getRewrittenResponse());
+			if (this.getResponse().body == null) {
+				this.setBody("text/html", this.getError());
+			}
 		}
 	}
 

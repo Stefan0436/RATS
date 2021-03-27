@@ -169,7 +169,11 @@ public class MainFileProcessor extends HttpPostProcessor {
 						file = FileContext.create(response, path, response.body);
 
 						found = true;
-						break;
+						this.setResponse(file.getRewrittenResponse());
+						if (this.getResponse().body == null) {
+							this.setBody("text/html", this.getError());
+						}
+						return;
 					}
 				}
 				if (!found) {

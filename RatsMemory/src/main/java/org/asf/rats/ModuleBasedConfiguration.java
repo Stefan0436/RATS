@@ -21,6 +21,11 @@ public abstract class ModuleBasedConfiguration<T extends ModuleBasedConfiguratio
 	}
 
 	@Comment("Module configuration, modules should use this map for configuration.")
-	public HashMap<String, String> modules = new HashMap<String, String>();
+	@Comment("Format goes as following:")
+	@Comment("")
+	@Comment("module> {")
+	@Comment("    (config map)")
+	@Comment("}")
+	public HashMap<String, HashMap<String, String>> modules = new HashMap<String, HashMap<String, String>>();
 
 }

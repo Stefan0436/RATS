@@ -46,6 +46,9 @@ public class MainFileProcessor extends HttpPostProcessor {
 			setResponseMessage("Access to parent directories denied");
 			setBody("text/html", getError());
 		} else {
+			if (!path.startsWith("/"))
+				path = "/" + path;
+
 			for (IFileAlias alias : context.getAliases()) {
 				if (alias instanceof IContextProviderExtension) {
 					((IContextProviderExtension) alias).provide(context);
@@ -71,11 +74,11 @@ public class MainFileProcessor extends HttpPostProcessor {
 					setResponseCode(restriction.getResponseCode());
 					setResponseMessage(restriction.getResponseMessage());
 					restriction.rewriteResponse(getResponse());
-					
+
 					if (getResponse().body == null) {
 						setBody("text/html", getError());
 					}
-					
+
 					return;
 				}
 			}
@@ -165,8 +168,6 @@ public class MainFileProcessor extends HttpPostProcessor {
 							String pth = path;
 							if (pth.endsWith("/"))
 								pth = pth.substring(0, pth.length() - 1);
-							if (!pth.startsWith("/"))
-								pth = "/" + pth;
 							((IPathProviderExtension) inst).provide(pth);
 						}
 						inst.process(contentType, client);
@@ -191,8 +192,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 					String pth = path;
 					if (pth.endsWith("/"))
 						pth = pth.substring(0, pth.length() - 1);
-					if (!pth.startsWith("/"))
-						pth = "/" + pth;
+
 					((IPathProviderExtension) provider).provide(pth);
 				}
 				if (provider instanceof IContextProviderExtension) {

@@ -13,9 +13,6 @@ public class DefaultIndexPage extends IndexPageProvider {
 	public void process(Socket client, File[] directories, File[] files) {
 		try {
 			String path = getFolderPath();
-			if (!path.startsWith("/"))
-				path = "/" + path;
-
 			InputStream strm = getClass().getResource("/index.template.html").openStream();
 			setBody("text/html", process(new String(strm.readAllBytes()), path, new File(getFolderPath()).getName(),
 					null, directories, files));
@@ -141,7 +138,7 @@ public class DefaultIndexPage extends IndexPageProvider {
 		}
 
 		String prettyPath = path;
-		if (prettyPath.endsWith("/"))
+		if (prettyPath.endsWith("/") && !prettyPath.equals("/"))
 			prettyPath = prettyPath.substring(0, prettyPath.length() - 1);
 
 		str = str.replaceAll("\\%path\\%", path);

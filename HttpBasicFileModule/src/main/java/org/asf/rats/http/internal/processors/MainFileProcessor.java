@@ -46,21 +46,6 @@ public class MainFileProcessor extends HttpPostProcessor {
 			setResponseMessage("Access to parent directories denied");
 			setBody("text/html", getError());
 		} else {
-			for (IFileRestrictionProvider restriction : context.getRestrictions()) {
-				if (restriction instanceof IContextProviderExtension) {
-					((IContextProviderExtension) restriction).provide(context);
-				}
-				if (restriction instanceof IServerProviderExtension) {
-					((IServerProviderExtension) restriction).provide(getServer());
-				}
-				if (!restriction.checkRestriction(path, getRequest())) {
-					setResponseCode(403);
-					setResponseMessage("Access denied");
-					setBody("text/html", getError());
-					return;
-				}
-			}
-
 			for (IFileAlias alias : context.getAliases()) {
 				if (alias instanceof IContextProviderExtension) {
 					((IContextProviderExtension) alias).provide(context);
@@ -71,6 +56,27 @@ public class MainFileProcessor extends HttpPostProcessor {
 				if (alias.match(getRequest(), path)) {
 					path = alias.rewrite(getRequest(), path);
 					break;
+				}
+			}
+
+			for (IFileRestrictionProvider restriction : context.getRestrictions()) {
+				if (restriction instanceof IContextProviderExtension) {
+					((IContextProviderExtension) restriction).provide(context);
+				}
+				if (restriction instanceof IServerProviderExtension) {
+					((IServerProviderExtension) restriction).provide(getServer());
+				}
+				if (!restriction.checkRestriction(path, getRequest())) {
+					getResponse().body = null;
+					setResponseCode(restriction.getResponseCode());
+					setResponseMessage(restriction.getResponseMessage());
+					restriction.rewriteResponse(getResponse());
+					
+					if (getResponse().body == null) {
+						setBody("text/html", getError());
+					}
+					
+					return;
 				}
 			}
 
@@ -96,7 +102,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 					setResponseMessage("File not found");
 					setBody("text/html", getError());
 					return;
-				}				
+				}
 			}
 
 			if (contentType == null) {

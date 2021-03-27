@@ -147,7 +147,6 @@ public class MainFileProcessor extends HttpPostProcessor {
 					return;
 				}
 			} else {
-				boolean found = false;
 				for (FilePostHandler handler : context.getPostHandlers()) {
 					if (handler instanceof IContextProviderExtension) {
 						((IContextProviderExtension) handler).provide(context);
@@ -168,7 +167,6 @@ public class MainFileProcessor extends HttpPostProcessor {
 
 						file = FileContext.create(response, path, response.body);
 
-						found = true;
 						this.setResponse(file.getRewrittenResponse());
 						if (this.getResponse().body == null) {
 							this.setBody("text/html", this.getError());
@@ -176,12 +174,10 @@ public class MainFileProcessor extends HttpPostProcessor {
 						return;
 					}
 				}
-				if (!found) {
-					setResponseCode(403);
-					setResponseMessage("POST not supported");
-					setBody("text/html", getError());
-					return;
-				}
+				setResponseCode(403);
+				setResponseMessage("POST not supported");
+				setBody("text/html", getError());
+				return;
 			}
 
 			for (IFileExtensionProvider provider : context.getExtensions()) {

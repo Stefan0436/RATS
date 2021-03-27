@@ -554,7 +554,11 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	 * @param processor The processor implementation to register.
 	 */
 	public void registerProcessor(HttpPostProcessor processor) {
-		postProcessors.add(processor);
+		if (!postProcessors.stream()
+				.anyMatch(t -> t.getClass().getTypeName().equals(processor.getClass().getTypeName())
+						&& t.supportsChildPaths() == processor.supportsChildPaths()
+						&& t.supportsGet() == processor.supportsGet() && t.path() == processor.path()))
+			postProcessors.add(processor);
 	}
 
 	/**
@@ -563,6 +567,8 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	 * @param processor The processor implementation to register.
 	 */
 	public void registerProcessor(HttpGetProcessor processor) {
-		getProcessors.add(processor);
+		if (!getProcessors.stream().anyMatch(t -> t.getClass().getTypeName().equals(processor.getClass().getTypeName())
+				&& t.supportsChildPaths() == processor.supportsChildPaths() && t.path() == processor.path()))
+			getProcessors.add(processor);
 	}
 }

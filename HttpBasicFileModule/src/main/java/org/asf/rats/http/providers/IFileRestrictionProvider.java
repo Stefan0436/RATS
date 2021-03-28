@@ -27,21 +27,21 @@ public interface IFileRestrictionProvider {
 	/**
 	 * Retrieves the response code if this restriction does not check out.
 	 */
-	public default int getResponseCode() {
+	public default int getResponseCode(HttpRequest request) {
 		return 403;
 	}
 	
 	/**
 	 * Retrieves the response message if this restriction does not check out.
 	 */
-	public default String getResponseMessage() {
+	public default String getResponseMessage(HttpRequest request) {
 		return "Access denied";
 	}
 	
 	/**
 	 * Rewrites the response if this restriction does not check out.
 	 */
-	public default void rewriteResponse(HttpResponse response) {
+	public default void rewriteResponse(HttpRequest request, HttpResponse response) {
 	}
 
 }

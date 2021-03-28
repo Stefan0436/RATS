@@ -72,9 +72,9 @@ public class MainFileProcessor extends HttpPostProcessor {
 				}
 				if (!restriction.checkRestriction(path, getRequest())) {
 					getResponse().body = null;
-					setResponseCode(restriction.getResponseCode());
-					setResponseMessage(restriction.getResponseMessage());
-					restriction.rewriteResponse(getResponse());
+					setResponseCode(restriction.getResponseCode(getRequest()));
+					setResponseMessage(restriction.getResponseMessage(getRequest()));
+					restriction.rewriteResponse(getRequest(), getResponse());
 
 					if (getResponse().body == null) {
 						setBody("text/html", getError());

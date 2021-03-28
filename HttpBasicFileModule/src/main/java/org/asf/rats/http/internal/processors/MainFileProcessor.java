@@ -44,7 +44,7 @@ public class MainFileProcessor extends HttpUploadProcessor {
 		String path = getRequestPath().substring(path().length());
 		if (path.contains("\\")) {
 			setResponseCode(403);
-			setResponseMessage("Use of Windows path separator not allowed");
+			setResponseMessage("Use of Windows path separator denied");
 			setBody("text/html", getError());
 			return;
 		}

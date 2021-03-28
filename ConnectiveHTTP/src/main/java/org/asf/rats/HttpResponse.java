@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -123,9 +124,88 @@ public class HttpResponse {
 		return this;
 	}
 
+	/**
+	 * Sets a header
+	 * 
+	 * @param header Header name
+	 * @param value  Header value
+	 */
 	public HttpResponse setHeader(String header, String value) {
 		headers.put(header, value);
 		return this;
+	}
+
+	/**
+	 * Sets a header
+	 * 
+	 * @param header        Header name
+	 * @param value         Header value
+	 * @param duplicateMode False to replace duplicates, true to name the duplicate
+	 *                      header [name]#xxx to allow it. (will be parsed
+	 *                      automatically)
+	 */
+	public HttpResponse setHeader(String header, String value, boolean duplicateMode) {
+
+		if (headers.containsKey(header) && duplicateMode) {
+			String headerOld = header;
+
+			int num = 1;
+			while (headers.containsKey(header)) {
+				header = headerOld + "#" + num++;
+			}
+		}
+
+		headers.put(header, value);
+		return this;
+	}
+
+	/**
+	 * Retrieves a requested header (returns all values with the same header name)
+	 * 
+	 * @param header Header name
+	 * @return Array of value strings
+	 */
+	public String[] getHeader(String header) {
+		ArrayList<String> lst = new ArrayList<String>();
+
+		headers.forEach((k, v) -> {
+			if (k.contains("#")) {
+				k = k.substring(0, k.indexOf("#"));
+			}
+			if (k.equals(header)) {
+				lst.add(v);
+			}
+		});
+
+		return lst.toArray(t -> new String[t]);
+	}
+
+	/**
+	 * Retrieves a requested header (returns all values with the same header name)
+	 * 
+	 * @param header          Header name
+	 * @param caseInsensitive True to enable case-insensitive mode.
+	 * @return Array of value strings
+	 */
+	public String[] getHeader(String header, boolean caseInsensitive) {
+		ArrayList<String> lst = new ArrayList<String>();
+
+		headers.forEach((k, v) -> {
+			if (k.contains("#")) {
+				k = k.substring(0, k.indexOf("#"));
+			}
+			if (caseInsensitive) {
+				if (k.equalsIgnoreCase(header)) {
+					lst.add(v);
+				}
+			} else {
+				if (k.equals(header)) {
+					lst.add(v);
+				}
+			}
+		});
+
+		return lst.toArray(t -> new String[t]);
 	}
 
 	/**
@@ -142,6 +222,9 @@ public class HttpResponse {
 
 		headers.forEach((k, v) -> {
 			resp.append("\r\n");
+			if (k.contains("#")) {
+				k = k.substring(0, k.indexOf("#")); // allows for multiple headers with same name
+			}
 			resp.append(k).append(": ");
 			resp.append(v);
 		});

@@ -32,16 +32,18 @@ public interface IVirtualFileProvider {
 	/**
 	 * Processes the file request,
 	 * 
-	 * @param path          Input path (real path in the context folder)
-	 * @param postMediaType Media type, null if not a post request (supportsPost
-	 *                      needs to be true in order to use this)
-	 * @param request       HTTP Request
-	 * @param response      HTTP Response
-	 * @param client        Client making the request
+	 * @param path            Input path (real path in the context folder)
+	 * @param uploadMediaType Media type, null if not a post or put request
+	 *                        (supportsPost needs to be true in order to use this)
+	 * @param request         HTTP Request
+	 * @param response        HTTP Response
+	 * @param client          Client making the request
+	 * @param method Request method (either GET, POST, PUT or DELETE)
 	 */
-	public void process(String path, String postMediaType, HttpRequest request, HttpResponse response, Socket client);
+	public void process(String path, String uploadMediaType, HttpRequest request, HttpResponse response, Socket client,
+			String method);
 
-	public default boolean supportsPost() {
+	public default boolean supportsUpload() {
 		return false;
 	}
 

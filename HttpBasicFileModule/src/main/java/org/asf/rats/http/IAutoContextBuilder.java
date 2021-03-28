@@ -3,7 +3,7 @@ package org.asf.rats.http;
 import java.util.Map;
 
 import org.asf.rats.http.internal.implementation.DefaultIndexPage;
-import org.asf.rats.http.providers.FilePostHandler;
+import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
@@ -67,8 +67,8 @@ public interface IAutoContextBuilder {
 	/**
 	 * Retrieves the post request handlers.
 	 */
-	public default FilePostHandler[] postHandlers() {
-		return new FilePostHandler[0];
+	public default FileUploadHandler[] uploadHandlers() {
+		return new FileUploadHandler[0];
 	}
 
 	/**

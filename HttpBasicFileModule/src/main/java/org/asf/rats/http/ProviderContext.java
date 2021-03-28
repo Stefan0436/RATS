@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.asf.rats.http.providers.FilePostHandler;
+import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
@@ -32,7 +32,7 @@ public class ProviderContext {
 	protected ArrayList<IFileAlias> aliases = new ArrayList<IFileAlias>();
 	protected ArrayList<IFileExtensionProvider> extensions = new ArrayList<IFileExtensionProvider>();
 	protected ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
-	protected ArrayList<FilePostHandler> postHandlers = new ArrayList<FilePostHandler>();
+	protected ArrayList<FileUploadHandler> uploadHandlers = new ArrayList<FileUploadHandler>();
 	protected ArrayList<HttpGetProcessor> processors = new ArrayList<HttpGetProcessor>();
 
 	public HttpGetProcessor[] getProcessors() {
@@ -59,8 +59,8 @@ public class ProviderContext {
 		return new HashMap<String, IndexPageProvider>(altIndexPages);
 	}
 
-	public FilePostHandler[] getPostHandlers() {
-		return postHandlers.toArray(t -> new FilePostHandler[t]);
+	public FileUploadHandler[] getUploadHandlers() {
+		return uploadHandlers.toArray(t -> new FileUploadHandler[t]);
 	}
 
 	public IFileExtensionProvider[] getExtensions() {

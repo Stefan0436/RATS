@@ -16,7 +16,7 @@ import javax.net.ssl.SSLHandshakeException;
 import org.asf.cyan.api.common.CYAN_COMPONENT;
 import org.asf.cyan.api.common.CyanComponent;
 import org.asf.rats.processors.HttpGetProcessor;
-import org.asf.rats.processors.HttpPostProcessor;
+import org.asf.rats.processors.HttpUploadProcessor;
 import org.asf.rats.processors.IAutoRegisterProcessor;
 
 /**
@@ -42,7 +42,7 @@ import org.asf.rats.processors.IAutoRegisterProcessor;
 public class ConnectiveHTTPServer extends CyanComponent {
 
 	protected String name = "ASF Connective";
-	protected String version = "1.0.0.A2";
+	protected String version = "1.0.0.A3";
 
 	protected boolean connected = false;
 	protected ServerSocket socket = null;
@@ -52,7 +52,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	protected HashMap<Socket, OutputStream> outStreams = new HashMap<Socket, OutputStream>();
 
 	protected ArrayList<HttpGetProcessor> getProcessors = new ArrayList<HttpGetProcessor>();
-	protected ArrayList<HttpPostProcessor> postProcessors = new ArrayList<HttpPostProcessor>();
+	protected ArrayList<HttpUploadProcessor> uploadProcessors = new ArrayList<HttpUploadProcessor>();
 
 	protected int port = 8080;
 
@@ -133,12 +133,12 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		for (Class<IAutoRegisterProcessor> register : findClasses(getMainImplementation(),
 				IAutoRegisterProcessor.class)) {
 
-			if (HttpPostProcessor.class.isAssignableFrom(register)) {
+			if (HttpUploadProcessor.class.isAssignableFrom(register)) {
 				try {
-					server.registerProcessor((HttpPostProcessor) register.getConstructor().newInstance());
+					server.registerProcessor((HttpUploadProcessor) register.getConstructor().newInstance());
 				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 						| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-					error("Automatic HTTP processor registration failed, HTTP POST Processor Type: "
+					error("Automatic HTTP processor registration failed, HTTP POST/PUT/DELETE Processor Type: "
 							+ register.getTypeName(), e);
 				}
 			} else if (HttpGetProcessor.class.isAssignableFrom(register)) {
@@ -146,7 +146,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 					server.registerProcessor((HttpGetProcessor) register.getConstructor().newInstance());
 				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 						| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-					error("Automatic HTTP processor registration failed, HTTP GET Processor Type: "
+					error("Automatic HTTP processor registration failed, HTTP POST/PUT/DELETE Processor Type: "
 							+ register.getTypeName(), e);
 				}
 			}
@@ -182,15 +182,15 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	/**
-	 * Properly transfers a post body to the given output stream, uses the
+	 * Properly transfers the request body to the given output stream, uses the
 	 * Content-Length header if present.
 	 * 
-	 * @param headers        Request headers
-	 * @param postBodyStream Post request body stream
-	 * @param output         Output stream
+	 * @param headers    Request headers
+	 * @param bodyStream Request body stream
+	 * @param output     Output stream
 	 * @throws IOException If transferring fails.
 	 */
-	public static void transferPostBody(HashMap<String, String> headers, InputStream postBodyStream, OutputStream output)
+	public static void transferRequestBody(HashMap<String, String> headers, InputStream bodyStream, OutputStream output)
 			throws IOException {
 		if (headers.containsKey("Content-Length")) {
 			long length = Long.valueOf(headers.get("Content-Length"));
@@ -198,17 +198,17 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			for (long i = 0; i < length; i += tr) {
 				tr = Integer.MAX_VALUE / 1000;
 				if ((length - (long) i) < tr) {
-					tr = postBodyStream.available();
+					tr = bodyStream.available();
 					if (tr == 0) {
-						output.write(postBodyStream.read());
+						output.write(bodyStream.read());
 						i += 1;
 					}
-					tr = postBodyStream.available();
+					tr = bodyStream.available();
 				}
-				output.write(postBodyStream.readNBytes(tr));
+				output.write(bodyStream.readNBytes(tr));
 			}
 		} else {
-			postBodyStream.transferTo(output);
+			bodyStream.transferTo(output);
 		}
 	}
 
@@ -235,17 +235,17 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	protected void processRequest(Socket client, HttpRequest msg) throws IOException {
 		boolean compatible = false;
 		ArrayList<HttpGetProcessor> getProcessorLst = new ArrayList<HttpGetProcessor>(getProcessors);
-		ArrayList<HttpPostProcessor> postProcessorLst = new ArrayList<HttpPostProcessor>(postProcessors);
+		ArrayList<HttpUploadProcessor> uploadProcessorLst = new ArrayList<HttpUploadProcessor>(uploadProcessors);
 
-		for (HttpPostProcessor proc : postProcessorLst) {
+		for (HttpUploadProcessor proc : uploadProcessorLst) {
 			if (proc.supportsGet()) {
 				getProcessorLst.add(proc);
 			}
 		}
 
-		if (msg.method.equals("POST")) {
-			HttpPostProcessor impl = null;
-			for (HttpPostProcessor proc : postProcessorLst) {
+		if (msg.method.equals("POST") || msg.method.equals("PUT")) {
+			HttpUploadProcessor impl = null;
+			for (HttpUploadProcessor proc : uploadProcessorLst) {
 				if (!proc.supportsChildPaths()) {
 					String url = msg.path;
 					if (!url.endsWith("/"))
@@ -263,10 +263,10 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				}
 			}
 			if (!compatible) {
-				postProcessorLst.sort((t1, t2) -> {
+				uploadProcessorLst.sort((t1, t2) -> {
 					return -Integer.compare(t1.path().split("/").length, t2.path().split("/").length);
 				});
-				for (HttpPostProcessor proc : postProcessorLst) {
+				for (HttpUploadProcessor proc : uploadProcessorLst) {
 					if (proc.supportsChildPaths()) {
 						String url = msg.path;
 						if (!url.endsWith("/"))
@@ -285,9 +285,9 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				}
 			}
 			if (compatible) {
-				HttpPostProcessor processor = impl.instanciate(this, msg);
+				HttpUploadProcessor processor = impl.instanciate(this, msg);
 				processor.process((msg.headers.get("Content-Type") == null ? msg.headers.get("Content-type")
-						: msg.headers.get("Content-Type")), client);
+						: msg.headers.get("Content-Type")), client, msg.method);
 				closeConnection(processor.getResponse(), client);
 			}
 		} else {
@@ -340,8 +340,8 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		}
 
 		if (!compatible) {
-			if (msg.method.equals("POST")) {
-				closeConnection(msg, 415, "Unsupported post request", client);
+			if (msg.method.equals("POST") || msg.method.equals("PUT")) {
+				closeConnection(msg, 405, "Unsupported request", client);
 			} else {
 				closeConnection(msg, 404, "Command not found", client);
 			}
@@ -577,16 +577,16 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	/**
-	 * Registers a new POST request processor.
+	 * Registers a new upload request processor. (POST, DELETE or PUT)
 	 * 
 	 * @param processor The processor implementation to register.
 	 */
-	public void registerProcessor(HttpPostProcessor processor) {
-		if (!postProcessors.stream()
+	public void registerProcessor(HttpUploadProcessor processor) {
+		if (!uploadProcessors.stream()
 				.anyMatch(t -> t.getClass().getTypeName().equals(processor.getClass().getTypeName())
 						&& t.supportsChildPaths() == processor.supportsChildPaths()
 						&& t.supportsGet() == processor.supportsGet() && t.path() == processor.path()))
-			postProcessors.add(processor);
+			uploadProcessors.add(processor);
 	}
 
 	/**

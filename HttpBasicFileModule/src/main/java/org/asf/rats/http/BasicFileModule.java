@@ -45,7 +45,7 @@ public class BasicFileModule extends CyanComponent {
 
 							factory.addAliases(contBuilder.aliases());
 							factory.addExtensions(contBuilder.extensions());
-							factory.addPostHandlers(contBuilder.postHandlers());
+							factory.addUploadHandlers(contBuilder.uploadHandlers());
 							factory.addProcessors(contBuilder.getHandlers());
 							factory.addRestrictions(contBuilder.restrictions());
 							factory.addIndexPages(contBuilder.altIndexPages());

@@ -74,7 +74,6 @@ public class HttpResponse {
 	public HttpResponse setContent(String type, byte[] body) {
 		headers.put("Content-Type", type);
 		headers.put("Content-Disposition", "attachment");
-		headers.put("Content-Length", Integer.toString(body.length));
 
 		if (this.body != null) {
 			try {
@@ -133,7 +132,7 @@ public class HttpResponse {
 	 * Builds the HTTP response
 	 * 
 	 * @param output Output stream to write to.
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public void build(OutputStream output) throws IOException {
 		StringBuilder resp = new StringBuilder();
@@ -147,14 +146,14 @@ public class HttpResponse {
 			resp.append(v);
 		});
 
-		if (body != null) {
+		if (body != null && !input.method.equals("HEAD") && status != 204) {
 			resp.append("\r\n");
 			resp.append("\r\n");
 			output.write(resp.toString().getBytes());
 
 			long v = body.transferTo(output);
 			this.headers.put("Content-Length", Long.toString(v));
-			
+
 			body.close();
 			body = null;
 		} else {

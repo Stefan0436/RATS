@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +13,7 @@ import org.asf.rats.HttpResponse;
 import org.asf.rats.http.FileContext;
 import org.asf.rats.http.MainFileMap;
 import org.asf.rats.http.ProviderContext;
-import org.asf.rats.http.providers.FilePostHandler;
+import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IContextProviderExtension;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
@@ -21,9 +22,9 @@ import org.asf.rats.http.providers.IPathProviderExtension;
 import org.asf.rats.http.providers.IServerProviderExtension;
 import org.asf.rats.http.providers.IVirtualFileProvider;
 import org.asf.rats.http.providers.IndexPageProvider;
-import org.asf.rats.processors.HttpPostProcessor;
+import org.asf.rats.processors.HttpUploadProcessor;
 
-public class MainFileProcessor extends HttpPostProcessor {
+public class MainFileProcessor extends HttpUploadProcessor {
 
 	protected String path = "";
 	protected ProviderContext context;
@@ -39,17 +40,24 @@ public class MainFileProcessor extends HttpPostProcessor {
 	}
 
 	@Override
-	public void process(String contentType, Socket client) {
+	public void process(String contentType, Socket client, String method) {
 		String path = getRequestPath().substring(path().length());
+		if (path.contains("\\")) {
+			setResponseCode(403);
+			setResponseMessage("Use of Windows path separator not allowed");
+			setBody("text/html", getError());
+			return;
+		}
+		while (path.startsWith("/")) {
+			path = path.substring(1);
+		}
 
 		if (path.startsWith("..")) {
 			setResponseCode(403);
 			setResponseMessage("Access to parent directories denied");
 			setBody("text/html", getError());
 		} else {
-			if (!path.startsWith("/"))
-				path = "/" + path;
-
+			path = "/" + path;
 			for (IFileAlias alias : context.getAliases()) {
 				if (alias instanceof IContextProviderExtension) {
 					((IContextProviderExtension) alias).provide(context);
@@ -83,24 +91,27 @@ public class MainFileProcessor extends HttpPostProcessor {
 					return;
 				}
 			}
-			
+
 			for (IVirtualFileProvider provider : context.getVirtualFiles()) {
-				if ((contentType == null || provider.supportsPost()) && provider.match(path, getRequest())) {
+				if (((contentType == null && !method.equals("DELETE")) || provider.supportsUpload())
+						&& provider.match(path, getRequest())) {
+
 					IVirtualFileProvider file = provider.newInstance();
-					
+
 					if (file instanceof IContextProviderExtension) {
 						((IContextProviderExtension) file).provide(context);
 					}
 					if (file instanceof IServerProviderExtension) {
 						((IServerProviderExtension) file).provide(getServer());
 					}
-					
+
 					setResponseCode(200);
-					file.process(path, contentType, getRequest(), getResponse(), client);
-					
+					file.process(path, contentType, getRequest(), getResponse(), client, method);
+
 					if (this.getResponse().body == null) {
 						this.setBody("text/html", this.getError());
 					}
+
 					return;
 				}
 			}
@@ -130,20 +141,21 @@ public class MainFileProcessor extends HttpPostProcessor {
 				}
 			}
 
-			if (contentType == null) {
+			if (contentType == null && !method.equals("DELETE")) {
 				if (sourceFile.isDirectory()) {
 					processDir(sourceFile, path, client);
 					return;
 				}
 			} else {
-				for (FilePostHandler handler : context.getPostHandlers()) {
+				for (FileUploadHandler handler : context.getUploadHandlers()) {
 					if (!handler.supportsDirectories() && sourceFile.exists() && sourceFile.isDirectory()) {
 						continue;
 					}
 					if (handler.match(getRequest(), path)) {
 						HttpResponse response = (file != null ? file.getRewrittenResponse() : getResponse());
 
-						FilePostHandler inst = handler.instanciate(getServer(), getRequest(), response, path);
+						FileUploadHandler inst = handler.instanciate(getServer(), getRequest(), response, path,
+								sourceFile);
 						if (inst instanceof IPathProviderExtension) {
 							String pth = path;
 							if (pth.endsWith("/"))
@@ -153,15 +165,28 @@ public class MainFileProcessor extends HttpPostProcessor {
 						if (inst instanceof IContextProviderExtension) {
 							((IContextProviderExtension) inst).provide(context);
 						}
-						inst.process(contentType, client);
-
-						file = FileContext.create(response, path, response.body);
-
-						this.setResponse(file.getRewrittenResponse());
-						if (this.getResponse().body == null) {
-							this.setBody("text/html", this.getError());
+						if (inst.requiresClosedFile() && strm != null) {
+							try {
+								strm.close();
+							} catch (IOException e) {
+							}
 						}
-						return;
+						boolean support = inst.process(contentType, client, method);
+						if (support) {
+							file = FileContext.create(response, path, response.body);
+
+							this.setResponse(file.getRewrittenResponse());
+							if (this.getResponse().body == null) {
+								this.setBody("text/html", this.getError());
+							}
+
+							return;
+						} else {
+							setResponseCode(405);
+							setResponseMessage(method.toUpperCase() + " not supported");
+							setBody("text/html", getError());
+							return;
+						}
 					}
 				}
 
@@ -170,8 +195,8 @@ public class MainFileProcessor extends HttpPostProcessor {
 					return;
 				}
 
-				setResponseCode(403);
-				setResponseMessage("POST not supported");
+				setResponseCode(405);
+				setResponseMessage(method.toUpperCase() + " not supported");
 				setBody("text/html", getError());
 				return;
 			}
@@ -271,6 +296,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 			}
 
 		});
+
 		IndexPageProvider inst = page.instanciate(files, dirs, getServer(), getRequest(), getResponse(), path);
 		if (inst instanceof IContextProviderExtension) {
 			((IContextProviderExtension) inst).provide(context);
@@ -279,7 +305,7 @@ public class MainFileProcessor extends HttpPostProcessor {
 	}
 
 	@Override
-	public HttpPostProcessor createNewInstance() {
+	public HttpUploadProcessor createNewInstance() {
 		return new MainFileProcessor(path, context);
 	}
 

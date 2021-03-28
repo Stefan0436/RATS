@@ -8,32 +8,34 @@ import org.asf.rats.HttpRequest;
 
 /**
  * 
- * HTTP Post Request Processor, processes post requests.
+ * HTTP Upload Request Processor, processes post, delete and put requests.
  * 
  * @author Stefan0436 - AerialWorks Software Foundation
  *
  */
-public abstract class HttpPostProcessor extends HttpGetProcessor {
+public abstract class HttpUploadProcessor extends HttpGetProcessor {
 
 	@Override
 	public void process(Socket client) {
-		process(null, client);
+		process(null, client, "GET");
 	}
-	
+
 	/**
-	 * Retrieves the body text of the post request.
+	 * Retrieves the body text of the request.
+	 * 
 	 * @return Body text.
 	 */
-	protected String getBody() {
-		return getRequest().getBody();
+	protected String getRequestBody() {
+		return getRequest().getRequestBody();
 	}
 
 	/**
 	 * Retrieves the body input stream. (unusable if getBody was called)
+	 * 
 	 * @return Body input stream.
 	 */
-	protected InputStream getBodyStream() {
-		return getRequest().getBodyStream();
+	protected InputStream getRequestBodyStream() {
+		return getRequest().getRequestBodyStream();
 	}
 
 	/**
@@ -41,10 +43,10 @@ public abstract class HttpPostProcessor extends HttpGetProcessor {
 	 * 
 	 * @param server  Server to use
 	 * @param request HTTP request
-	 * @return New HttpGetProcessor configured for processing.
+	 * @return New HttpUploadProcessor configured for processing.
 	 */
-	public HttpPostProcessor instanciate(ConnectiveHTTPServer server, HttpRequest request) {
-		return (HttpPostProcessor) super.instanciate(server, request);
+	public HttpUploadProcessor instanciate(ConnectiveHTTPServer server, HttpRequest request) {
+		return (HttpUploadProcessor) super.instanciate(server, request);
 	}
 
 	/**
@@ -57,19 +59,20 @@ public abstract class HttpPostProcessor extends HttpGetProcessor {
 	}
 
 	/**
-	 * Processes a request, the post-specific parameters will be null if get is
+	 * Processes a request, the upload-specific parameters will be null if get is
 	 * used.
 	 * 
 	 * @param contentType Content type
 	 * @param client      Client used to contact the server.
+	 * @param method      Method used. (GET, PUT, DELETE or POST)
 	 */
-	public abstract void process(String contentType, Socket client);
+	public abstract void process(String contentType, Socket client, String method);
 
 	/**
 	 * Creates an instance for processing HTTP requests.
 	 * 
-	 * @return New instance of this processor.F
+	 * @return New instance of this processor.
 	 */
-	public abstract HttpPostProcessor createNewInstance();
+	public abstract HttpUploadProcessor createNewInstance();
 
 }

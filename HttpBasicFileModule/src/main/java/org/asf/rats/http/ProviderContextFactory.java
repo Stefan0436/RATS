@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.asf.rats.http.internal.implementation.DefaultIndexPage;
 import org.asf.rats.http.internal.processors.MainFileProcessor;
-import org.asf.rats.http.providers.FilePostHandler;
+import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
@@ -81,7 +81,7 @@ public class ProviderContextFactory {
 	protected ArrayList<IFileAlias> aliases = new ArrayList<IFileAlias>();
 	protected ArrayList<IFileExtensionProvider> extensions = new ArrayList<IFileExtensionProvider>();
 	protected ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
-	protected ArrayList<FilePostHandler> postHandlers = new ArrayList<FilePostHandler>();
+	protected ArrayList<FileUploadHandler> uploadHandlers = new ArrayList<FileUploadHandler>();
 	protected ArrayList<HttpGetProcessor> extraProcessors = new ArrayList<HttpGetProcessor>();
 
 	public ProviderContextFactory addProcessor(HttpGetProcessor processor) {
@@ -103,21 +103,21 @@ public class ProviderContextFactory {
 		return this;
 	}
 
-	public ProviderContextFactory addPostHandler(FilePostHandler handler) {
-		postHandlers.add(handler);
+	public ProviderContextFactory addUploadHandler(FileUploadHandler handler) {
+		uploadHandlers.add(handler);
 		return this;
 	}
 
-	public ProviderContextFactory addPostHandlers(FilePostHandler[] handlers) {
-		for (FilePostHandler itm : handlers) {
-			addPostHandler(itm);
+	public ProviderContextFactory addUploadHandlers(FileUploadHandler[] handlers) {
+		for (FileUploadHandler itm : handlers) {
+			addUploadHandler(itm);
 		}
 		return this;
 	}
 
-	public ProviderContextFactory addPostHandlers(Iterable<FilePostHandler> handlers) {
-		for (FilePostHandler itm : handlers) {
-			addPostHandler(itm);
+	public ProviderContextFactory addUploadHandlers(Iterable<FileUploadHandler> handlers) {
+		for (FileUploadHandler itm : handlers) {
+			addUploadHandler(itm);
 		}
 		return this;
 	}
@@ -264,7 +264,7 @@ public class ProviderContextFactory {
 
 		context.aliases.addAll(aliases);
 		context.extensions.addAll(extensions);
-		context.postHandlers.addAll(postHandlers);
+		context.uploadHandlers.addAll(uploadHandlers);
 		context.restrictions.addAll(restrictions);
 		context.virtualFiles.addAll(virtualFiles);
 		context.processors.addAll(extraProcessors);

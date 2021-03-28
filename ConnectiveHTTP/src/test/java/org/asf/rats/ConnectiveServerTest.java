@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.Random;
 
-import org.asf.rats.processors.HttpPostProcessor;
+import org.asf.rats.processors.HttpUploadProcessor;
 import org.junit.Test;
 
 public class ConnectiveServerTest {
@@ -28,7 +28,7 @@ public class ConnectiveServerTest {
 		return txt;
 	}
 
-	class TestProc extends HttpPostProcessor {
+	class TestProc extends HttpUploadProcessor {
 
 		@Override
 		public String path() {
@@ -36,16 +36,16 @@ public class ConnectiveServerTest {
 		}
 
 		@Override
-		public void process(String contentType, Socket client) {
+		public void process(String contentType, Socket client, String method) {
 			if (contentType != null)
-				setBody(getBody() + "-test");
+				setBody(getRequestBody() + "-test");
 			else {
 				setBody("12345");
 			}
 		}
 
 		@Override
-		public HttpPostProcessor createNewInstance() {
+		public HttpUploadProcessor createNewInstance() {
 			return new TestProc();
 		}
 

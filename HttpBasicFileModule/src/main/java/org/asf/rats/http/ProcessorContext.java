@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import org.asf.rats.ConnectiveHTTPServer;
 import org.asf.rats.processors.HttpGetProcessor;
-import org.asf.rats.processors.HttpPostProcessor;
+import org.asf.rats.processors.HttpUploadProcessor;
 
 /**
  * 
@@ -25,8 +25,8 @@ public class ProcessorContext extends ArrayList<HttpGetProcessor> {
 	 */
 	public void apply(ConnectiveHTTPServer server) {
 		for (HttpGetProcessor proc : this) {
-			if (proc instanceof HttpPostProcessor)
-				server.registerProcessor((HttpPostProcessor) proc);
+			if (proc instanceof HttpUploadProcessor)
+				server.registerProcessor((HttpUploadProcessor) proc);
 			else
 				server.registerProcessor(proc);
 		}

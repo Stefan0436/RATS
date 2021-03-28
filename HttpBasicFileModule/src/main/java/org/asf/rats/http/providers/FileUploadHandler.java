@@ -1,5 +1,6 @@
 package org.asf.rats.http.providers;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -11,42 +12,52 @@ import org.asf.rats.HttpResponse;
 
 /**
  * 
- * HTTP Post Provider - provides support for post requests.
+ * HTTP Upload Provider - provides support for post, delete and put requests.
  * 
  * @author Stefan0436 - AerialWorks Software Foundation
  *
  */
-public abstract class FilePostHandler {
+public abstract class FileUploadHandler {
 
 	private ConnectiveHTTPServer server;
 	private HttpResponse response;
 	private HttpRequest request;
+	private File source;
 
 	private String loc;
 
-	private void assign(ConnectiveHTTPServer server, HttpRequest request, HttpResponse response, String location) {
+	private void assign(ConnectiveHTTPServer server, HttpRequest request, HttpResponse response, String location,
+			File source) {
 		this.server = server;
 		this.request = request;
 		this.response = response;
 
 		this.loc = location;
+		this.source = source;
 	}
 
-	public FilePostHandler instanciate(ConnectiveHTTPServer server, HttpRequest request, HttpResponse response,
-			String location) {
+	public FileUploadHandler instanciate(ConnectiveHTTPServer server, HttpRequest request, HttpResponse response,
+			String location, File source) {
 
-		FilePostHandler handler = newInstance();
-		handler.assign(server, request, response, location);
+		FileUploadHandler handler = newInstance();
+		handler.assign(server, request, response, location, source);
 		return handler;
 	}
 
 	/**
-	 * Retrieves the body text of the post request.
+	 * Retrieves the source file
+	 */
+	protected File getSourceFile() {
+		return source;
+	}
+
+	/**
+	 * Retrieves the body text of the request.
 	 * 
 	 * @return Body text.
 	 */
-	protected String getBody() {
-		return getRequest().getBody();
+	protected String getRequestBody() {
+		return getRequest().getRequestBody();
 	}
 
 	/**
@@ -54,14 +65,14 @@ public abstract class FilePostHandler {
 	 * 
 	 * @return Body input stream.
 	 */
-	protected InputStream getBodyStream() {
-		return getRequest().getBodyStream();
+	protected InputStream getRequestBodyStream() {
+		return getRequest().getRequestBodyStream();
 	}
 
 	/**
 	 * Creates a new instance of this handler
 	 */
-	protected abstract FilePostHandler newInstance();
+	protected abstract FileUploadHandler newInstance();
 
 	/**
 	 * Checks if the handler is compatible.
@@ -73,18 +84,28 @@ public abstract class FilePostHandler {
 	public abstract boolean match(HttpRequest request, String path);
 
 	/**
-	 * Processes the post request.
+	 * Processes the request.
 	 * 
 	 * @param contentType Content type.
 	 * @param client      Client sending the request.
+	 * @param method      Method used, either POST, PUT or DELETE.
+	 * @return True if the method is supported, false otherwise.
 	 */
-	public abstract void process(String contentType, Socket client);
+	public abstract boolean process(String contentType, Socket client, String method);
 
 	/**
 	 * Checks if this processor supports directories, false will let the default
 	 * system handle the directory.
 	 */
 	public boolean supportsDirectories() {
+		return false;
+	}
+
+	/**
+	 * Checks if the input source file needs to be closed in order for the processor
+	 * to function.
+	 */
+	public boolean requiresClosedFile() {
 		return false;
 	}
 

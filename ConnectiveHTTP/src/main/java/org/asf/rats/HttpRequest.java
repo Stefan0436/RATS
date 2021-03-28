@@ -65,7 +65,7 @@ public class HttpRequest {
 			msg.headers.put(key, value);
 		}
 
-		if (msg.method.equals("POST")) {
+		if (msg.method.equals("POST") || msg.method.equals("PUT")) {
 			msg.bodyStream = request;
 		}
 
@@ -104,26 +104,26 @@ public class HttpRequest {
 	}
 
 	/**
-	 * Returns the post body stream, null if not a post request.
+	 * Returns the request body stream, null if not a post or put request.
 	 * 
 	 * @return Body InputStream or null.
 	 */
-	public InputStream getBodyStream() {
+	public InputStream getRequestBodyStream() {
 		return bodyStream;
 	}
 
 	/**
-	 * Returns the post body in string format. <b>WARNING:</b> leaves the body
-	 * stream in a useless state!
+	 * Returns the request body in string format. <b>WARNING:</b> leaves the body
+	 * stream in a useless state! (POST or PUT only)
 	 * 
 	 * @return String representing the body.
 	 */
-	public String getBody() {
+	public String getRequestBody() {
 		if (bodyStream != null) {
 			if (body == null) {
 				try {
 					ByteArrayOutputStream strm = new ByteArrayOutputStream();
-					ConnectiveHTTPServer.transferPostBody(headers, bodyStream, strm);
+					ConnectiveHTTPServer.transferRequestBody(headers, bodyStream, strm);
 					body = new String(strm.toByteArray());
 				} catch (IOException e) {
 					throw new RuntimeException(e);
@@ -136,15 +136,15 @@ public class HttpRequest {
 	}
 
 	/**
-	 * Transfers the post body to a given output stream. Ignored if not a post
-	 * request.
+	 * Transfers the request body to a given output stream. Ignored if not a post or
+	 * put request.
 	 * 
 	 * @param output Output stream
 	 * @throws IOException If transferring fails
 	 */
-	public void transferBody(OutputStream output) throws IOException {
+	public void transferRequestBody(OutputStream output) throws IOException {
 		if (bodyStream != null) {
-			ConnectiveHTTPServer.transferPostBody(headers, bodyStream, output);
+			ConnectiveHTTPServer.transferRequestBody(headers, bodyStream, output);
 		}
 	}
 }

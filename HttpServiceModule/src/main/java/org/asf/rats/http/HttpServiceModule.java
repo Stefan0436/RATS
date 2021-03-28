@@ -15,6 +15,7 @@ import org.asf.rats.configuration.RatsConfiguration;
 @CYAN_COMPONENT
 public class HttpServiceModule extends ConnectiveHTTPServer {
 	protected static void initComponent() {
+		RatsAuthProvider.assign();
 		Memory.getInstance().getOrCreate("connective.http.props.port").assign(RatsConfiguration.getInstance().httpPort);
 	}
 }

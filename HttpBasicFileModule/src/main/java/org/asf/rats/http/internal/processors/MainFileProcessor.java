@@ -19,13 +19,14 @@ import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
 import org.asf.rats.http.providers.IPathProviderExtension;
 import org.asf.rats.http.providers.IServerProviderExtension;
+import org.asf.rats.http.providers.IVirtualFileProvider;
 import org.asf.rats.http.providers.IndexPageProvider;
 import org.asf.rats.processors.HttpPostProcessor;
 
 public class MainFileProcessor extends HttpPostProcessor {
 
-	private String path = "";
-	private ProviderContext context;
+	protected String path = "";
+	protected ProviderContext context;
 
 	public MainFileProcessor(String path, ProviderContext context) {
 		this.path = path;
@@ -82,6 +83,27 @@ public class MainFileProcessor extends HttpPostProcessor {
 					return;
 				}
 			}
+			
+			for (IVirtualFileProvider provider : context.getVirtualFiles()) {
+				if ((contentType == null || provider.supportsPost()) && provider.match(path, getRequest())) {
+					IVirtualFileProvider file = provider.newInstance();
+					
+					if (file instanceof IContextProviderExtension) {
+						((IContextProviderExtension) file).provide(context);
+					}
+					if (file instanceof IServerProviderExtension) {
+						((IServerProviderExtension) file).provide(getServer());
+					}
+					
+					setResponseCode(200);
+					file.process(path, contentType, getRequest(), getResponse(), client);
+					
+					if (this.getResponse().body == null) {
+						this.setBody("text/html", this.getError());
+					}
+					return;
+				}
+			}
 
 			File sourceFile = new File(context.getSourceDirectory(), path);
 			if (!sourceFile.exists() && contentType == null) {
@@ -110,55 +132,13 @@ public class MainFileProcessor extends HttpPostProcessor {
 
 			if (contentType == null) {
 				if (sourceFile.isDirectory()) {
-					HashMap<String, IndexPageProvider> indexPages = new HashMap<String, IndexPageProvider>(
-							context.getAltIndexPages());
-
-					if (indexPages.isEmpty()) {
-						if (context.getDefaultIndexPage() == null) {
-							setResponseCode(404);
-							setResponseMessage("File not found");
-							setBody("text/html", getError());
-						} else {
-							setResponseCode(300);
-							execPage(context.getDefaultIndexPage(), sourceFile, path, client);
-						}
-					} else {
-						ArrayList<String> keys = new ArrayList<String>(indexPages.keySet());
-						keys.sort((t1, t2) -> {
-							return -Integer.compare(t1.split("/").length, t2.split("/").length);
-						});
-
-						for (String key : keys) {
-							String url = path;
-							if (!url.endsWith("/"))
-								url += "/";
-
-							String supportedURL = key;
-							if (!supportedURL.endsWith("/"))
-								supportedURL += "/";
-
-							if (url.startsWith(supportedURL)) {
-								setResponseCode(300);
-								execPage(indexPages.get(key), sourceFile, path, client);
-								return;
-							}
-						}
-
-						if (context.getDefaultIndexPage() == null) {
-							setResponseCode(404);
-							setResponseMessage("File not found");
-							setBody("text/html", getError());
-						} else {
-							setResponseCode(300);
-							execPage(context.getDefaultIndexPage(), sourceFile, path, client);
-						}
-					}
+					processDir(sourceFile, path, client);
 					return;
 				}
 			} else {
 				for (FilePostHandler handler : context.getPostHandlers()) {
-					if (handler instanceof IContextProviderExtension) {
-						((IContextProviderExtension) handler).provide(context);
+					if (!handler.supportsDirectories() && sourceFile.exists() && sourceFile.isDirectory()) {
+						continue;
 					}
 					if (handler.match(getRequest(), path)) {
 						HttpResponse response = (file != null ? file.getRewrittenResponse() : getResponse());
@@ -169,6 +149,9 @@ public class MainFileProcessor extends HttpPostProcessor {
 							if (pth.endsWith("/"))
 								pth = pth.substring(0, pth.length() - 1);
 							((IPathProviderExtension) inst).provide(pth);
+						}
+						if (inst instanceof IContextProviderExtension) {
+							((IContextProviderExtension) inst).provide(context);
 						}
 						inst.process(contentType, client);
 
@@ -181,6 +164,12 @@ public class MainFileProcessor extends HttpPostProcessor {
 						return;
 					}
 				}
+
+				if (sourceFile.exists() && sourceFile.isDirectory()) {
+					processDir(sourceFile, path, client);
+					return;
+				}
+
 				setResponseCode(403);
 				setResponseMessage("POST not supported");
 				setBody("text/html", getError());
@@ -215,11 +204,57 @@ public class MainFileProcessor extends HttpPostProcessor {
 		}
 	}
 
-	private String getError() {
+	protected void processDir(File sourceFile, String path, Socket client) {
+		HashMap<String, IndexPageProvider> indexPages = new HashMap<String, IndexPageProvider>(
+				context.getAltIndexPages());
+
+		if (indexPages.isEmpty()) {
+			if (context.getDefaultIndexPage() == null) {
+				setResponseCode(404);
+				setResponseMessage("File not found");
+				setBody("text/html", getError());
+			} else {
+				setResponseCode(300);
+				execPage(context.getDefaultIndexPage(), sourceFile, path, client);
+			}
+		} else {
+			ArrayList<String> keys = new ArrayList<String>(indexPages.keySet());
+			keys.sort((t1, t2) -> {
+				return -Integer.compare(t1.split("/").length, t2.split("/").length);
+			});
+
+			for (String key : keys) {
+				String url = path;
+				if (!url.endsWith("/"))
+					url += "/";
+
+				String supportedURL = key;
+				if (!supportedURL.endsWith("/"))
+					supportedURL += "/";
+
+				if (url.startsWith(supportedURL)) {
+					setResponseCode(300);
+					execPage(indexPages.get(key), sourceFile, path, client);
+					return;
+				}
+			}
+
+			if (context.getDefaultIndexPage() == null) {
+				setResponseCode(404);
+				setResponseMessage("File not found");
+				setBody("text/html", getError());
+			} else {
+				setResponseCode(300);
+				execPage(context.getDefaultIndexPage(), sourceFile, path, client);
+			}
+		}
+	}
+
+	protected String getError() {
 		return getServer().genError(getResponse(), getRequest());
 	}
 
-	private void execPage(IndexPageProvider page, File sourceFile, String path, Socket client) {
+	protected void execPage(IndexPageProvider page, File sourceFile, String path, Socket client) {
 		File[] files = sourceFile.listFiles(new FileFilter() {
 
 			@Override

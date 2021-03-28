@@ -8,6 +8,7 @@ import org.asf.rats.http.providers.FilePostHandler;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
+import org.asf.rats.http.providers.IVirtualFileProvider;
 import org.asf.rats.http.providers.IndexPageProvider;
 import org.asf.rats.processors.HttpGetProcessor;
 
@@ -27,6 +28,7 @@ public class ProviderContext {
 	protected HashMap<String, IndexPageProvider> altIndexPages = new HashMap<String, IndexPageProvider>();
 
 	protected String sourceDirectory;
+	protected ArrayList<IVirtualFileProvider> virtualFiles = new ArrayList<IVirtualFileProvider>();
 	protected ArrayList<IFileAlias> aliases = new ArrayList<IFileAlias>();
 	protected ArrayList<IFileExtensionProvider> extensions = new ArrayList<IFileExtensionProvider>();
 	protected ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
@@ -63,6 +65,10 @@ public class ProviderContext {
 
 	public IFileExtensionProvider[] getExtensions() {
 		return extensions.toArray(t -> new IFileExtensionProvider[t]);
+	}
+
+	public IVirtualFileProvider[] getVirtualFiles() {
+		return virtualFiles.toArray(t -> new IVirtualFileProvider[t]);
 	}
 
 }

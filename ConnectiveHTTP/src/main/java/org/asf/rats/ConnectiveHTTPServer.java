@@ -77,6 +77,15 @@ public class ConnectiveHTTPServer extends CyanComponent {
 							closeConnection(dummy, 503, "Unsupported request", client);
 							dummy.close();
 						} else {
+							// change to different version system once http reaches 1.x.x (if it ever does)
+							if (Double.valueOf(msg.version.substring("HTTP/".length())) < 1.1) {
+								HttpRequest dummy = new HttpRequest();
+								dummy.version = msg.version;
+
+								closeConnection(dummy, 505, "HTTP Version Not Supported", client);
+								dummy.close();
+							}
+
 							processRequest(client, msg);
 						}
 						msg.close();
@@ -161,7 +170,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	/**
 	 * Retrieves the client output stream (override only)
 	 */
-	private OutputStream getClientOutput(Socket client) throws IOException {
+	protected OutputStream getClientOutput(Socket client) throws IOException {
 		return client.getOutputStream();
 	}
 
@@ -172,16 +181,35 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		return client.getInputStream();
 	}
 
-	@Deprecated
-	protected byte[] readStreamForRequest(InputStream in) throws IOException {
-		try {
-			while (in.available() == 0) {
-				Thread.sleep(10);
+	/**
+	 * Properly transfers a post body to the given output stream, uses the
+	 * Content-Length header if present.
+	 * 
+	 * @param headers        Request headers
+	 * @param postBodyStream Post request body stream
+	 * @param output         Output stream
+	 * @throws IOException If transferring fails.
+	 */
+	public static void transferPostBody(HashMap<String, String> headers, InputStream postBodyStream, OutputStream output)
+			throws IOException {
+		if (headers.containsKey("Content-Length")) {
+			long length = Long.valueOf(headers.get("Content-Length"));
+			int tr = 0;
+			for (long i = 0; i < length; i += tr) {
+				tr = Integer.MAX_VALUE / 1000;
+				if ((length - (long) i) < tr) {
+					tr = postBodyStream.available();
+					if (tr == 0) {
+						output.write(postBodyStream.read());
+						i += 1;
+					}
+					tr = postBodyStream.available();
+				}
+				output.write(postBodyStream.readNBytes(tr));
 			}
-		} catch (InterruptedException e) {
-
+		} else {
+			postBodyStream.transferTo(output);
 		}
-		return in.readNBytes(in.available());
 	}
 
 	/**

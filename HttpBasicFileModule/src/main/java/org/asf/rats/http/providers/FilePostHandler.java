@@ -34,7 +34,7 @@ public abstract class FilePostHandler {
 
 	public FilePostHandler instanciate(ConnectiveHTTPServer server, HttpRequest request, HttpResponse response,
 			String location) {
-		
+
 		FilePostHandler handler = newInstance();
 		handler.assign(server, request, response, location);
 		return handler;
@@ -42,6 +42,7 @@ public abstract class FilePostHandler {
 
 	/**
 	 * Retrieves the body text of the post request.
+	 * 
 	 * @return Body text.
 	 */
 	protected String getBody() {
@@ -50,6 +51,7 @@ public abstract class FilePostHandler {
 
 	/**
 	 * Retrieves the body input stream. (unusable if getBody was called)
+	 * 
 	 * @return Body input stream.
 	 */
 	protected InputStream getBodyStream() {
@@ -65,7 +67,7 @@ public abstract class FilePostHandler {
 	 * Checks if the handler is compatible.
 	 * 
 	 * @param request HTTP Request.
-	 * @param path   Input path.
+	 * @param path    Input path.
 	 * @return True if compatible, false otherwise.
 	 */
 	public abstract boolean match(HttpRequest request, String path);
@@ -77,6 +79,14 @@ public abstract class FilePostHandler {
 	 * @param client      Client sending the request.
 	 */
 	public abstract void process(String contentType, Socket client);
+
+	/**
+	 * Checks if this processor supports directories, false will let the default
+	 * system handle the directory.
+	 */
+	public boolean supportsDirectories() {
+		return false;
+	}
 
 	/**
 	 * Gets the REAL file path (relative to the root source directory on disk)

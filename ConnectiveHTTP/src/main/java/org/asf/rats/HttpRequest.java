@@ -1,7 +1,9 @@
 package org.asf.rats;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -120,7 +122,9 @@ public class HttpRequest {
 		if (bodyStream != null) {
 			if (body == null) {
 				try {
-					body = new String(bodyStream.readNBytes(bodyStream.available()));
+					ByteArrayOutputStream strm = new ByteArrayOutputStream();
+					ConnectiveHTTPServer.transferPostBody(headers, bodyStream, strm);
+					body = new String(strm.toByteArray());
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -128,6 +132,19 @@ public class HttpRequest {
 			return body;
 		} else {
 			return null;
+		}
+	}
+
+	/**
+	 * Transfers the post body to a given output stream. Ignored if not a post
+	 * request.
+	 * 
+	 * @param output Output stream
+	 * @throws IOException If transferring fails
+	 */
+	public void transferBody(OutputStream output) throws IOException {
+		if (bodyStream != null) {
+			ConnectiveHTTPServer.transferPostBody(headers, bodyStream, output);
 		}
 	}
 }

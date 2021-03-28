@@ -10,6 +10,7 @@ import org.asf.rats.http.providers.FilePostHandler;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
+import org.asf.rats.http.providers.IVirtualFileProvider;
 import org.asf.rats.http.providers.IndexPageProvider;
 import org.asf.rats.processors.HttpGetProcessor;
 
@@ -22,7 +23,7 @@ import org.asf.rats.processors.HttpGetProcessor;
  */
 public class ProviderContextFactory {
 
-	private static ProviderContextFactory defaultFactory = null;
+	protected static ProviderContextFactory defaultFactory = null;
 
 	/**
 	 * Retrieves the default (shared) factory.<br />
@@ -39,10 +40,10 @@ public class ProviderContextFactory {
 		return defaultFactory;
 	}
 
-	private int options = 0;
-	private boolean locked = false;
+	protected int options = 0;
+	protected boolean locked = false;
 
-	private boolean hasOption(int opt) {
+	protected boolean hasOption(int opt) {
 		return (opt & options) == opt;
 	}
 
@@ -70,17 +71,18 @@ public class ProviderContextFactory {
 		return this;
 	}
 
-	private String file = null;
-	private String path = null;
+	protected String file = null;
+	protected String path = null;
 
-	private IndexPageProvider defaultIndex = null;
+	protected IndexPageProvider defaultIndex = null;
 	protected HashMap<String, IndexPageProvider> altIndexPages = new HashMap<String, IndexPageProvider>();
 
-	private ArrayList<IFileAlias> aliases = new ArrayList<IFileAlias>();
-	private ArrayList<IFileExtensionProvider> extensions = new ArrayList<IFileExtensionProvider>();
-	private ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
-	private ArrayList<FilePostHandler> postHandlers = new ArrayList<FilePostHandler>();
-	private ArrayList<HttpGetProcessor> extraProcessors = new ArrayList<HttpGetProcessor>();
+	protected ArrayList<IVirtualFileProvider> virtualFiles = new ArrayList<IVirtualFileProvider>();
+	protected ArrayList<IFileAlias> aliases = new ArrayList<IFileAlias>();
+	protected ArrayList<IFileExtensionProvider> extensions = new ArrayList<IFileExtensionProvider>();
+	protected ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
+	protected ArrayList<FilePostHandler> postHandlers = new ArrayList<FilePostHandler>();
+	protected ArrayList<HttpGetProcessor> extraProcessors = new ArrayList<HttpGetProcessor>();
 
 	public ProviderContextFactory addProcessor(HttpGetProcessor processor) {
 		extraProcessors.add(processor);
@@ -177,6 +179,25 @@ public class ProviderContextFactory {
 		return this;
 	}
 
+	public ProviderContextFactory addVirtualFile(IVirtualFileProvider file) {
+		virtualFiles.add(file);
+		return this;
+	}
+
+	public ProviderContextFactory addVirtualFiles(IVirtualFileProvider[] files) {
+		for (IVirtualFileProvider itm : files) {
+			addVirtualFile(itm);
+		}
+		return this;
+	}
+
+	public ProviderContextFactory addVirtualFiles(Iterable<IVirtualFileProvider> files) {
+		for (IVirtualFileProvider itm : files) {
+			addVirtualFile(itm);
+		}
+		return this;
+	}
+
 	/**
 	 * Sets the execution location property of the context.
 	 * 
@@ -245,6 +266,7 @@ public class ProviderContextFactory {
 		context.extensions.addAll(extensions);
 		context.postHandlers.addAll(postHandlers);
 		context.restrictions.addAll(restrictions);
+		context.virtualFiles.addAll(virtualFiles);
 		context.processors.addAll(extraProcessors);
 		context.altIndexPages.putAll(altIndexPages);
 

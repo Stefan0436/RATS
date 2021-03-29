@@ -45,10 +45,16 @@ public class HttpResponse {
 	 * @param body Content body.
 	 */
 	public HttpResponse setContent(String type, String body) {
-		if (type != null)
+		if (type != null) {
 			headers.put("Content-Type", type);
-		else if (headers.containsKey("Content-Type"))
-			headers.remove("Content-Type");
+			headers.put("Content-Length", Integer.toString(body.getBytes().length));
+		}
+		else {
+			if (headers.containsKey("Content-Type"))
+				headers.remove("Content-Type");
+			if (headers.containsKey("Content-Length"))
+				headers.remove("Content-Length");
+		}
 
 		if (this.body != null) {
 			try {
@@ -75,6 +81,7 @@ public class HttpResponse {
 	public HttpResponse setContent(String type, byte[] body) {
 		headers.put("Content-Type", type);
 		headers.put("Content-Disposition", "attachment");
+		headers.put("Content-Length", Integer.toString(body.length));
 
 		if (this.body != null) {
 			try {
@@ -234,8 +241,7 @@ public class HttpResponse {
 			resp.append("\r\n");
 			output.write(resp.toString().getBytes());
 
-			long v = body.transferTo(output);
-			this.headers.put("Content-Length", Long.toString(v));
+			body.transferTo(output);
 
 			body.close();
 			body = null;

@@ -100,7 +100,7 @@ public class ConnectiveServerFactory {
 	 */
 	public ConnectiveHTTPServer build() throws InvocationTargetException {
 		if (implementation == null) {
-			if (!hasOption(OPTION_DISABLE_MODULE_IMPLEMENTATIONS)) {
+			if (!hasOption(OPTION_DISABLE_MODULE_IMPLEMENTATIONS) && ConnectiveHTTPServer.implementation != null) {
 				implementation = ConnectiveHTTPServer.implementation.getClass();
 			} else {
 				implementation = ConnectiveHTTPServer.class;

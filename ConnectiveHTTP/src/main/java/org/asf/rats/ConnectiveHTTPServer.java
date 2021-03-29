@@ -41,6 +41,16 @@ import org.asf.rats.processors.IAutoRegisterProcessor;
 @CYAN_COMPONENT
 public class ConnectiveHTTPServer extends CyanComponent {
 
+	protected double httpVersion = 1.1;
+	protected String protocol = "HTTP/%v";
+	
+	/**
+	 * Retrieves the preferred protocol version (HTTP/version)
+	 */
+	public String getPreferredProtocol() {
+		return protocol.replace("%v", Double.toString(httpVersion));
+	}
+	
 	protected String name = "ASF Connective";
 	protected String version = "1.0.0.A3";
 
@@ -72,13 +82,13 @@ public class ConnectiveHTTPServer extends CyanComponent {
 						msg = HttpRequest.parse(in);
 						if (msg == null) {
 							HttpRequest dummy = new HttpRequest();
-							dummy.version = "HTTP/1.1";
+							dummy.version = getPreferredProtocol();
 
 							closeConnection(dummy, 503, "Unsupported request", client);
 							dummy.close();
 						} else {
 							// change to different version system once http reaches 1.x.x (if it ever does)
-							if (Double.valueOf(msg.version.substring("HTTP/".length())) < 1.1) {
+							if (Double.valueOf(msg.version.substring("HTTP/".length())) < httpVersion) {
 								HttpRequest dummy = new HttpRequest();
 								dummy.version = msg.version;
 
@@ -99,7 +109,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 						try {
 							if (msg == null) {
 								msg = new HttpRequest();
-								msg.version = "HTTP/1.1";
+								msg.version = getPreferredProtocol();
 							}
 							closeConnection(msg, 503, "Internal server error", client);
 						} catch (IOException ex2) {

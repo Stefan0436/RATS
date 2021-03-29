@@ -12,6 +12,11 @@ import org.asf.rats.HttpRequest;
 public interface IFileAlias {
 
 	/**
+	 * Creates a new instance of the alias provider.
+	 */
+	public IFileAlias newInstance();
+
+	/**
 	 * Checks if the alias is compatible.
 	 * 
 	 * @param request HTTP Request.

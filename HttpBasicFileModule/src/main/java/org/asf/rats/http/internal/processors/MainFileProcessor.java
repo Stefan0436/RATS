@@ -14,6 +14,7 @@ import org.asf.rats.http.FileContext;
 import org.asf.rats.http.MainFileMap;
 import org.asf.rats.http.ProviderContext;
 import org.asf.rats.http.providers.FileUploadHandler;
+import org.asf.rats.http.providers.IClientSocketProvider;
 import org.asf.rats.http.providers.IContextProviderExtension;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
@@ -58,37 +59,51 @@ public class MainFileProcessor extends HttpUploadProcessor {
 			setBody("text/html", getError());
 		} else {
 			path = "/" + path;
-			for (IFileAlias alias : context.getAliases()) {
-				if (alias instanceof IContextProviderExtension) {
-					((IContextProviderExtension) alias).provide(context);
-				}
-				if (alias instanceof IServerProviderExtension) {
-					((IServerProviderExtension) alias).provide(getServer());
-				}
-				if (alias.match(getRequest(), path)) {
+			for (IFileAlias provider : context.getAliases()) {
+				if (provider.match(getRequest(), path)) {
+					IFileAlias alias = provider.newInstance();
+
+					if (alias instanceof IContextProviderExtension) {
+						((IContextProviderExtension) alias).provide(context);
+					}
+					if (alias instanceof IServerProviderExtension) {
+						((IServerProviderExtension) alias).provide(getServer());
+					}
+					if (alias instanceof IClientSocketProvider) {
+						((IClientSocketProvider) alias).provide(client);
+					}
+
 					path = alias.rewrite(getRequest(), path);
 					break;
 				}
 			}
 
-			for (IFileRestrictionProvider restriction : context.getRestrictions()) {
-				if (restriction instanceof IContextProviderExtension) {
-					((IContextProviderExtension) restriction).provide(context);
-				}
-				if (restriction instanceof IServerProviderExtension) {
-					((IServerProviderExtension) restriction).provide(getServer());
-				}
-				if (!restriction.checkRestriction(path, getRequest())) {
-					getResponse().body = null;
-					setResponseCode(restriction.getResponseCode(getRequest()));
-					setResponseMessage(restriction.getResponseMessage(getRequest()));
-					restriction.rewriteResponse(getRequest(), getResponse());
+			for (IFileRestrictionProvider provider : context.getRestrictions()) {
+				if (provider.match(getRequest(), path)) {
+					IFileRestrictionProvider restriction = provider.newInstance();
 
-					if (getResponse().body == null) {
-						setBody("text/html", getError());
+					if (restriction instanceof IContextProviderExtension) {
+						((IContextProviderExtension) restriction).provide(context);
+					}
+					if (restriction instanceof IServerProviderExtension) {
+						((IServerProviderExtension) restriction).provide(getServer());
+					}
+					if (restriction instanceof IClientSocketProvider) {
+						((IClientSocketProvider) restriction).provide(client);
 					}
 
-					return;
+					if (!restriction.checkRestriction(path, getRequest())) {
+						getResponse().body = null;
+						setResponseCode(restriction.getResponseCode(getRequest()));
+						setResponseMessage(restriction.getResponseMessage(getRequest()));
+						restriction.rewriteResponse(getRequest(), getResponse());
+
+						if (getResponse().body == null) {
+							setBody("text/html", getError());
+						}
+
+						return;
+					}
 				}
 			}
 
@@ -103,6 +118,9 @@ public class MainFileProcessor extends HttpUploadProcessor {
 					}
 					if (file instanceof IServerProviderExtension) {
 						((IServerProviderExtension) file).provide(getServer());
+					}
+					if (file instanceof IClientSocketProvider) {
+						((IClientSocketProvider) file).provide(client);
 					}
 
 					setResponseCode(200);
@@ -156,6 +174,7 @@ public class MainFileProcessor extends HttpUploadProcessor {
 
 						FileUploadHandler inst = handler.instanciate(getServer(), getRequest(), response, path,
 								sourceFile);
+
 						if (inst instanceof IPathProviderExtension) {
 							String pth = path;
 							if (pth.endsWith("/"))
@@ -165,12 +184,14 @@ public class MainFileProcessor extends HttpUploadProcessor {
 						if (inst instanceof IContextProviderExtension) {
 							((IContextProviderExtension) inst).provide(context);
 						}
+
 						if (inst.requiresClosedFile() && strm != null) {
 							try {
 								strm.close();
 							} catch (IOException e) {
 							}
 						}
+
 						boolean support = inst.process(contentType, client, method);
 						if (support) {
 							file = FileContext.create(response, path, response.body);
@@ -202,22 +223,31 @@ public class MainFileProcessor extends HttpUploadProcessor {
 			}
 
 			for (IFileExtensionProvider provider : context.getExtensions()) {
-				if (provider instanceof IPathProviderExtension) {
-					String pth = path;
-					if (pth.endsWith("/"))
-						pth = pth.substring(0, pth.length() - 1);
-
-					((IPathProviderExtension) provider).provide(pth);
-				}
-				if (provider instanceof IContextProviderExtension) {
-					((IContextProviderExtension) provider).provide(context);
-				}
-				if (provider instanceof IServerProviderExtension) {
-					((IServerProviderExtension) provider).provide(getServer());
-				}
 				if (sourceFile.getName().endsWith(provider.fileExtension())) {
+
+					IFileExtensionProvider inst = provider.newInstance();
+
+					if (inst instanceof IPathProviderExtension) {
+						String pth = path;
+						if (pth.endsWith("/"))
+							pth = pth.substring(0, pth.length() - 1);
+
+						((IPathProviderExtension) inst).provide(pth);
+					}
+					
+					if (inst instanceof IContextProviderExtension) {
+						((IContextProviderExtension) inst).provide(context);
+					}
+					if (inst instanceof IServerProviderExtension) {
+						((IServerProviderExtension) inst).provide(getServer());
+					}
+					if (inst instanceof IClientSocketProvider) {
+						((IClientSocketProvider) inst).provide(client);
+					}
+
 					getResponse().body = strm;
-					file = provider.rewrite(getResponse(), getRequest());
+					file = inst.rewrite(getResponse(), getRequest());
+
 					break;
 				}
 			}

@@ -12,6 +12,11 @@ import org.asf.rats.http.FileContext;
  *
  */
 public interface IFileExtensionProvider {
+	
+	/**
+	 * Creates a new instance of the extension provider.
+	 */
+	public IFileExtensionProvider newInstance();
 
 	/**
 	 * The file extension that is supported

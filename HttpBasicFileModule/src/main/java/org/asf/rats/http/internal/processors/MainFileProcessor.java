@@ -194,13 +194,12 @@ public class MainFileProcessor extends HttpUploadProcessor {
 
 						boolean support = inst.process(contentType, client, method);
 						if (support) {
-							file = FileContext.create(response, path, response.body);
-
-							this.setResponse(file.getRewrittenResponse());
-							if (this.getResponse().body == null) {
-								this.setBody("text/html", this.getError());
+							setResponse(response);
+							
+							if (getResponse().body == null) {
+								setBody("text/html", this.getError());
 							}
-
+							
 							return;
 						} else {
 							setResponseCode(405);

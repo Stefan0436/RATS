@@ -50,7 +50,10 @@ public class HttpRequest {
 			msg.path = req.getPath();
 			msg.query = req.getQuery();
 		} catch (URISyntaxException e) {
-			msg.path = mainHeader[1].replaceAll("\\", "/");
+			msg.path = mainHeader[1].replace("\\", "/");
+		}
+		while (msg.path.contains("//")) {
+			msg.path = msg.path.replace("//", "/");
 		}
 		msg.method = mainHeader[0];
 		msg.version = mainHeader[2];

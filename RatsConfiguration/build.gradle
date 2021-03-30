@@ -62,6 +62,6 @@ dependencies {
 	
 	implementation project(":RatsMemory")
 	
-	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A8'
+	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A9'
 	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.12'
 }

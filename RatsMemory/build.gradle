@@ -59,6 +59,6 @@ artifacts {
 
 dependencies {
 	testImplementation 'junit:junit:4.12'
-	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A9'
+	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A10'
 	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
 }

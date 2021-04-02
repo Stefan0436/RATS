@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 
 /**
@@ -55,6 +56,7 @@ public class HttpRequest {
 				msg.query = msg.path.substring(msg.path.lastIndexOf("?") + 1);
 				msg.path = msg.path.substring(0, msg.path.lastIndexOf("?"));
 			}
+			msg.path = URLDecoder.decode(msg.path, "UTF-8");
 		}
 		while (msg.path.contains("//")) {
 			msg.path = msg.path.replace("//", "/");

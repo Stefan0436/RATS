@@ -47,9 +47,9 @@ public class ClientMain {
 
 	public static void main(String[] args) throws IOException {
 		if (System.getProperty("ideMode") != null) {
-			System.setProperty("log4j2.configurationFile", ClientMain.class.getResource("/log4j2-ide.xml").toString());
+			System.setProperty("log4j2.configurationFile", ClientMain.class.getResource("/log4j2-client-ide.xml").toString());
 		} else {
-			System.setProperty("log4j2.configurationFile", ClientMain.class.getResource("/log4j2.xml").toString());
+			System.setProperty("log4j2.configurationFile", ClientMain.class.getResource("/log4j2-client.xml").toString());
 		}
 
 		logger = new ClientLogger();

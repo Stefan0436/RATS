@@ -7,6 +7,7 @@ import org.asf.cyan.api.common.CYAN_COMPONENT;
 import org.asf.cyan.api.common.CyanComponent;
 import org.asf.rats.ConnectiveHTTPServer;
 import org.asf.rats.Memory;
+import org.asf.rats.http.internal.implementation.DefaultFileProcessor;
 
 /**
  * 
@@ -18,6 +19,8 @@ import org.asf.rats.Memory;
 @CYAN_COMPONENT
 public class BasicFileModule extends CyanComponent {
 	protected static void initComponent() {
+		DefaultFileProcessor.assign();
+		
 		Memory.getInstance().getOrCreate("bootstrap.call").append(new Runnable() {
 
 			@Override

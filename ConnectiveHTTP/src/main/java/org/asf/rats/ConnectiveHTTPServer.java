@@ -97,8 +97,8 @@ public class ConnectiveHTTPServer extends CyanComponent {
 							}
 
 							processRequest(client, msg);
+							msg.close();
 						}
-						msg.close();
 					} catch (IOException ex) {
 						if (!connected || ex instanceof SSLHandshakeException
 								|| (ex instanceof SocketException && (ex.getMessage().equals("Broken pipe")

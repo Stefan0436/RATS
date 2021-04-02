@@ -1,8 +1,11 @@
 #!/bin/bash
+
+cd /usr/lib/rats
+
 libs=$(find /usr/lib/rats -name '*.jar' -exec echo -n :{} \;)
 libs=${libs:1}
 
-java -cp "$libs" -Drats.config.dir="/usr/lib/rats" org.asf.rats.main.RatsMain $@
+java -cp "$libs" org.asf.rats.main.RatsMain $@
 exitcode=$?
 echo
 

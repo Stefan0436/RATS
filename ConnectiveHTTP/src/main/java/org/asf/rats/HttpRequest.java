@@ -51,6 +51,10 @@ public class HttpRequest {
 			msg.query = req.getQuery();
 		} catch (URISyntaxException e) {
 			msg.path = mainHeader[1].replace("\\", "/");
+			if (msg.path.contains("?")) {
+				msg.query = msg.path.substring(msg.path.lastIndexOf("?") + 1);
+				msg.path = msg.path.substring(0, msg.path.lastIndexOf("?"));
+			}
 		}
 		while (msg.path.contains("//")) {
 			msg.path = msg.path.replace("//", "/");

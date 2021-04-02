@@ -47,9 +47,10 @@ public class HttpResponse {
 	public HttpResponse setContent(String type, String body) {
 		if (type != null) {
 			headers.put("Content-Type", type);
-			headers.put("Content-Length", Integer.toString(body.getBytes().length));
-		}
-		else {
+
+			if (body != null)
+				headers.put("Content-Length", Integer.toString(body.getBytes().length));
+		} else {
 			if (headers.containsKey("Content-Type"))
 				headers.remove("Content-Type");
 			if (headers.containsKey("Content-Length"))

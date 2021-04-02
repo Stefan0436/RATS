@@ -5,14 +5,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 
+import org.asf.rats.http.providers.IContextRootProviderExtension;
 import org.asf.rats.http.providers.IndexPageProvider;
 
-public class DefaultIndexPage extends IndexPageProvider {
+public class DefaultIndexPage extends IndexPageProvider implements IContextRootProviderExtension {
+
+	private String contextRoot;
 
 	@Override
 	public void process(Socket client, File[] directories, File[] files) {
 		try {
-			String path = getFolderPath();
+			String path = contextRoot + "/" + getFolderPath();
+			while (path.contains("//")) {
+				path = path.replace("//", "/");
+			}
 			InputStream strm = getClass().getResource("/index.template.html").openStream();
 			setBody("text/html", process(new String(strm.readAllBytes()), path, new File(getFolderPath()).getName(),
 					null, directories, files));
@@ -154,6 +160,11 @@ public class DefaultIndexPage extends IndexPageProvider {
 	@Override
 	protected IndexPageProvider newInstance() {
 		return new DefaultIndexPage();
+	}
+
+	@Override
+	public void provideVirtualRoot(String virtualRoot) {
+		contextRoot = virtualRoot;
 	}
 
 }

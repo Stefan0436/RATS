@@ -24,7 +24,9 @@ public class MainFileMap extends MimetypesFileTypeMap {
 		this.parent = parent;
 		this.addMimeTypes("application/xml	xml");
 		this.addMimeTypes("application/json	json");
-		this.addMimeTypes("application/x-yaml	yaml	yml");
+		this.addMimeTypes("application/x-yaml	yaml	yml");;
+		this.addMimeTypes("text/css	css");
+		this.addMimeTypes("text/javascript	js");
 		if (new File(".mime.types").exists()) {
 			try {
 				this.addMimeTypes(Files.readString(Path.of(".mime.types")));

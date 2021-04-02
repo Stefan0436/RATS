@@ -43,14 +43,14 @@ public class ConnectiveHTTPServer extends CyanComponent {
 
 	protected double httpVersion = 1.1;
 	protected String protocol = "HTTP/%v";
-	
+
 	/**
 	 * Retrieves the preferred protocol version (HTTP/version)
 	 */
 	public String getPreferredProtocol() {
 		return protocol.replace("%v", Double.toString(httpVersion));
 	}
-	
+
 	protected String name = "ASF Connective";
 	protected String version = "1.0.0.A3";
 

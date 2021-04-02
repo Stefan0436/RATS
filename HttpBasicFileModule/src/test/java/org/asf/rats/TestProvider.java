@@ -11,7 +11,7 @@ public class TestProvider implements IAutoContextBuilder {
 
 	@Override
 	public String virtualDir() {
-		return "/";
+		return "/test";
 	}
 
 }

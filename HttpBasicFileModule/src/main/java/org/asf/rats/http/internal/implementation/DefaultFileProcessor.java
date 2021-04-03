@@ -321,8 +321,8 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 				setResponseMessage("File not found");
 				setBody("text/html", getError());
 			} else {
-				setResponseCode(300);
-				setResponseMessage("Multiple Choices");
+				setResponseCode(200);
+				setResponseMessage("Multiple choices");
 				execPage(getContext().getDefaultIndexPage(), sourceFile, path, client);
 			}
 		} else {
@@ -341,8 +341,8 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 					supportedURL += "/";
 
 				if (url.startsWith(supportedURL)) {
-					setResponseCode(300);
-					setResponseMessage("Multiple Choices");
+					setResponseCode(200);
+					setResponseMessage("Multiple choices");
 					execPage(indexPages.get(key), sourceFile, path, client);
 					return;
 				}
@@ -353,8 +353,8 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 				setResponseMessage("File not found");
 				setBody("text/html", getError());
 			} else {
-				setResponseCode(300);
-				setResponseMessage("Multiple Choices");
+				setResponseCode(200);
+				setResponseMessage("Multiple choices");
 				execPage(getContext().getDefaultIndexPage(), sourceFile, path, client);
 			}
 		}

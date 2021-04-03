@@ -7,13 +7,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.BiFunction;
-
-import javax.net.ssl.SSLHandshakeException;
 
 import org.asf.cyan.api.common.CYAN_COMPONENT;
 import org.asf.cyan.api.common.CyanComponent;
@@ -68,9 +65,16 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	protected boolean connected = false;
 	protected ServerSocket socket = null;
 
+	@Deprecated
 	protected ArrayList<Socket> sockets = new ArrayList<Socket>();
+
+	@Deprecated
 	protected HashMap<Socket, InputStream> inStreams = new HashMap<Socket, InputStream>();
+
+	@Deprecated
 	protected HashMap<Socket, OutputStream> outStreams = new HashMap<Socket, OutputStream>();
+
+	protected ArrayList<ConnectedClient> clients = new ArrayList<ConnectedClient>();
 
 	protected ArrayList<HttpGetProcessor> getProcessors = new ArrayList<HttpGetProcessor>();
 	protected ArrayList<HttpUploadProcessor> uploadProcessors = new ArrayList<HttpUploadProcessor>();
@@ -87,54 +91,9 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				InputStream in = getClientInput(client);
 				OutputStream out = getClientOutput(client);
 
-				Thread clientProcessor = new Thread(() -> {
-
-					while (true) {
-						HttpRequest msg = null;
-						try {
-							msg = HttpRequest.parse(in);
-							if (msg == null) {
-								HttpRequest dummy = new HttpRequest();
-								dummy.version = getPreferredProtocol();
-
-								closeConnection(dummy, 503, "Unsupported request", client);
-								dummy.close();
-							} else {
-								// change to different version system once http reaches 1.x.x (if it ever does)
-								if (Double.valueOf(msg.version.substring("HTTP/".length())) < httpVersion) {
-									HttpRequest dummy = new HttpRequest();
-									dummy.version = msg.version;
-
-									closeConnection(dummy, 505, "HTTP Version Not Supported", client);
-									dummy.close();
-								}
-
-								processRequest(client, msg);
-								msg.close();
-							}
-						} catch (IOException ex) {
-							if (!connected || ex instanceof SSLHandshakeException || ex instanceof SocketException)
-								return;
-
-							error("Failed to process request", ex);
-							try {
-								if (msg == null) {
-									msg = new HttpRequest();
-									msg.version = getPreferredProtocol();
-								}
-								closeConnection(msg, 503, "Internal server error", client);
-							} catch (IOException ex2) {
-							}
-						}
-					}
-
-				}, "Client processor (" + client.getInetAddress().toString() + ":" + client.getPort() + ")");
-
-				clientProcessor.start();
-				sockets.add(client);
-				inStreams.put(client, in);
-				outStreams.put(client, out);
-
+				ConnectedClient cl = new ConnectedClient(client, in, out, this);
+				clients.add(cl);
+				cl.beginReceive();
 			} catch (IOException ex) {
 				if (!connected)
 					break;
@@ -252,192 +211,6 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	/**
-	 * Processes HTTP Requests
-	 * 
-	 * @param client HTTP Client
-	 * @param msg    Request
-	 * @throws IOException If processing fails
-	 */
-	protected void processRequest(Socket client, HttpRequest msg) throws IOException {
-		boolean compatible = false;
-		ArrayList<HttpGetProcessor> getProcessorLst = new ArrayList<HttpGetProcessor>(getProcessors);
-		ArrayList<HttpUploadProcessor> uploadProcessorLst = new ArrayList<HttpUploadProcessor>(uploadProcessors);
-
-		for (HttpUploadProcessor proc : uploadProcessorLst) {
-			if (proc.supportsGet()) {
-				getProcessorLst.add(proc);
-			}
-		}
-
-		if (msg.method.equals("POST") || msg.method.equals("PUT") || msg.method.equals("DELETE")) {
-			HttpUploadProcessor impl = null;
-			for (HttpUploadProcessor proc : uploadProcessorLst) {
-				if (!proc.supportsChildPaths()) {
-					String url = msg.path;
-					if (!url.endsWith("/"))
-						url += "/";
-
-					String supportedURL = proc.path();
-					if (!supportedURL.endsWith("/"))
-						supportedURL += "/";
-
-					if (url.equals(supportedURL)) {
-						compatible = true;
-						impl = proc;
-						break;
-					}
-				}
-			}
-			if (!compatible) {
-				uploadProcessorLst.sort((t1, t2) -> {
-					return -Integer.compare(t1.path().split("/").length, t2.path().split("/").length);
-				});
-				for (HttpUploadProcessor proc : uploadProcessorLst) {
-					if (proc.supportsChildPaths()) {
-						String url = msg.path;
-						if (!url.endsWith("/"))
-							url += "/";
-
-						String supportedURL = proc.path();
-						if (!supportedURL.endsWith("/"))
-							supportedURL += "/";
-
-						if (url.startsWith(supportedURL)) {
-							compatible = true;
-							impl = proc;
-							break;
-						}
-					}
-				}
-			}
-			if (compatible) {
-				HttpUploadProcessor processor = impl.instanciate(this, msg);
-				processor.process((msg.headers.get("Content-Type") == null ? msg.headers.get("Content-type")
-						: msg.headers.get("Content-Type")), client, msg.method);
-				HttpResponse resp = processor.getResponse();
-
-				if ((!msg.headers.containsKey("Connection") && !msg.headers.get("Connection").equals("Keep-Alive"))
-						|| (resp.headers.containsKey("Connection")
-								&& !resp.headers.get("Connection").equals("Keep-Alive")))
-					closeConnection(resp, client);
-				else {
-					resp.addDefaultHeaders(this);
-					resp.setConnectionState("Keep-Alive");
-					resp.build(outStreams.get(client));
-					outStreams.get(client).flush();
-				}
-			}
-		} else {
-			HttpGetProcessor impl = null;
-			for (HttpGetProcessor proc : getProcessorLst) {
-				if (!proc.supportsChildPaths()) {
-					String url = msg.path;
-					if (!url.endsWith("/"))
-						url += "/";
-
-					String supportedURL = proc.path();
-					if (!supportedURL.endsWith("/"))
-						supportedURL += "/";
-
-					if (url.equals(supportedURL)) {
-						compatible = true;
-						impl = proc;
-						break;
-					}
-				}
-			}
-			if (!compatible) {
-				getProcessorLst.sort((t1, t2) -> {
-					return -Integer.compare(t1.path().split("/").length, t2.path().split("/").length);
-				});
-				for (HttpGetProcessor proc : getProcessorLst) {
-					if (proc.supportsChildPaths()) {
-						String url = msg.path;
-						if (!url.endsWith("/"))
-							url += "/";
-
-						String supportedURL = proc.path();
-						if (!supportedURL.endsWith("/"))
-							supportedURL += "/";
-
-						if (url.startsWith(supportedURL)) {
-							compatible = true;
-							impl = proc;
-							break;
-						}
-					}
-				}
-			}
-			if (compatible) {
-				HttpGetProcessor processor = impl.instanciate(this, msg);
-				processor.process(client);
-				HttpResponse resp = processor.getResponse();
-
-				if ((!msg.headers.containsKey("Connection") && !msg.headers.get("Connection").equals("Keep-Alive"))
-						|| (resp.headers.containsKey("Connection")
-								&& !resp.headers.get("Connection").equals("Keep-Alive")))
-					closeConnection(resp, client);
-				else {
-					resp.addDefaultHeaders(this);
-					resp.setConnectionState("Keep-Alive");
-					resp.build(outStreams.get(client));
-					outStreams.get(client).flush();
-				}
-			}
-		}
-
-		if (!compatible) {
-			if (msg.method.equals("POST") || msg.method.equals("PUT") || msg.method.equals("DELETE")) {
-				closeConnection(msg, 405, "Unsupported request", client);
-			} else {
-				closeConnection(msg, 404, "Command not found", client);
-			}
-		}
-	}
-
-	/**
-	 * Closes a client connection
-	 * 
-	 * @param response Http response
-	 * @param client   Client to disconnect
-	 * @return HttpResponse instance.
-	 * @throws IOException If transmitting the response fails
-	 */
-	public synchronized HttpResponse closeConnection(HttpResponse response, Socket client) throws IOException {
-		response.addDefaultHeaders(this).setConnectionState("Closed").build(outStreams.get(client));
-		closeConnection(client);
-		return response;
-	}
-
-	/**
-	 * Closes a client connection, sends no response
-	 * 
-	 * @param client Client to disconnect.
-	 */
-	public synchronized void closeConnection(Socket client) {
-		try {
-			client.close();
-		} catch (IOException e) {
-		}
-
-		InputStream strm = inStreams.get(client);
-		OutputStream strmOut = outStreams.get(client);
-
-		try {
-			strm.close();
-		} catch (IOException e) {
-		}
-		try {
-			strmOut.close();
-		} catch (IOException e) {
-		}
-
-		inStreams.remove(client);
-		outStreams.remove(client);
-		sockets.remove(client);
-	}
-
-	/**
 	 * Generates an error html (bifunction connective.http.gen.error.provider is
 	 * called with response and request as parameters)
 	 * 
@@ -478,29 +251,6 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		}
 		return Memory.getInstance().getOrCreate("connective.http.gen.error.provider").getValue(BiFunction.class)
 				.apply(response, request).toString();
-	}
-
-	/**
-	 * Closes a client connection
-	 * 
-	 * @param request The request used
-	 * @param status  Status code
-	 * @param message Status message
-	 * @param client  Client to disconnect
-	 * @return HttpResponse instance.
-	 * @throws IOException If transmitting the response fails
-	 */
-	public synchronized HttpResponse closeConnection(HttpRequest request, int status, String message, Socket client)
-			throws IOException {
-		HttpResponse resp = new HttpResponse(status, message, request);
-
-		if (resp.body == null) {
-			resp.setContent("text/html", genError(resp, request));
-		}
-
-		resp.addDefaultHeaders(this).setConnectionState("Closed").build(outStreams.get(client));
-		closeConnection(client);
-		return resp;
 	}
 
 	/**

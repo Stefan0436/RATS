@@ -20,7 +20,7 @@ public class FileProcessor {
 
 	private static HashMap<String, FileProcessor> instanciatedProcessors = new HashMap<String, FileProcessor>();
 	private static FileProcessor implementation;
-	private FileExecutionContext context;
+	private FileExecutionHandler handler;
 
 	/**
 	 * 
@@ -29,7 +29,7 @@ public class FileProcessor {
 	 * @author Stefan0436 - AerialWorks Software Foundation
 	 *
 	 */
-	public interface FileExecutionContext {
+	public interface FileExecutionHandler {
 		public void run(ServerOutputHander outputHandler, HttpResourceProvider resourceProvider);
 	}
 
@@ -131,15 +131,15 @@ public class FileProcessor {
 	 * @param resourceProvider Resource provider
 	 */
 	public void process(ServerOutputHander outputHandler, HttpResourceProvider resourceProvider) {
-		context.run(outputHandler, resourceProvider);
+		handler.run(outputHandler, resourceProvider);
 	}
 
 	/**
 	 * Connects the file execution context with this processor, internal use only.
 	 */
-	public void connect(FileExecutionContext context) {
-		if (this.context == null)
-			this.context = context;
+	public void connect(FileExecutionHandler handler) {
+		if (this.handler == null)
+			this.handler = handler;
 	}
 
 	/**

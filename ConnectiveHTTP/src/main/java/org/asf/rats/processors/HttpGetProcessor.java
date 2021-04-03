@@ -26,6 +26,9 @@ public abstract class HttpGetProcessor {
 		HttpGetProcessor inst = createNewInstance();
 		inst.server = server;
 		inst.request = request;
+		if (request.headers.containsKey("Connection"))  {
+			inst.getResponse().headers.put("Connection", request.headers.get("Connection"));
+		}
 		return inst;
 	}
 

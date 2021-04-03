@@ -61,5 +61,5 @@ dependencies {
 	testImplementation 'junit:junit:4.12'
 	
 	implementation project(":RatsMemory")
-	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
+	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'	
 }

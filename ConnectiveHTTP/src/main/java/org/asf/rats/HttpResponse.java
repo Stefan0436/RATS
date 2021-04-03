@@ -32,6 +32,9 @@ public class HttpResponse {
 		this.input = input;
 		this.status = status;
 		this.message = message;
+		if (input.headers.containsKey("Connection") && !headers.containsKey("Connection")) {
+			headers.put("Connection", "Closed");
+		}
 	}
 
 	public HttpResponse(HttpRequest input) {
@@ -118,7 +121,10 @@ public class HttpResponse {
 	public HttpResponse addDefaultHeaders(ConnectiveHTTPServer server) {
 		headers.put("Server", server.getName() + " " + server.getVersion());
 		headers.put("Date", getHttpDate(new Date()));
-		setConnectionState("Closed");
+		if ((input.headers.containsKey("Connection") && !headers.containsKey("Connection"))
+				|| !headers.containsKey("Content-Length")) {
+			headers.put("Connection", "Closed");
+		}
 		return this;
 	}
 
@@ -228,18 +234,29 @@ public class HttpResponse {
 		resp.append(status).append(" ");
 		resp.append(message);
 
+		if (input.method.equals("HEAD") || status == 204 || status == 201) {
+			if (headers.containsKey("Content-Length"))
+				headers.remove("Content-Length");
+		}
+		if (status == 204 || status == 201) {
+			if (headers.containsKey("Content-Type"))
+				headers.remove("Content-Type");
+		}
+
 		headers.forEach((k, v) -> {
-			resp.append("\r\n");
-			if (k.contains("#")) {
-				k = k.substring(0, k.indexOf("#")); // allows for multiple headers with same name
+			if (!k.equals("Connection") || !v.equals("Closed")) {
+				resp.append("\r\n");
+				if (k.contains("#")) {
+					k = k.substring(0, k.indexOf("#")); // allows for multiple headers with same name
+				}
+				resp.append(k).append(": ");
+				resp.append(v);
 			}
-			resp.append(k).append(": ");
-			resp.append(v);
 		});
 
+		resp.append("\r\n");
+		resp.append("\r\n");
 		if (body != null && !input.method.equals("HEAD") && status != 204) {
-			resp.append("\r\n");
-			resp.append("\r\n");
 			output.write(resp.toString().getBytes());
 
 			body.transferTo(output);

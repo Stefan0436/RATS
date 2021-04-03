@@ -271,6 +271,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 				setBody("text/html", getError());
 			} else {
 				setResponseCode(300);
+				setResponseMessage("Multiple Choices");
 				execPage(getContext().getDefaultIndexPage(), sourceFile, path, client);
 			}
 		} else {
@@ -290,6 +291,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 
 				if (url.startsWith(supportedURL)) {
 					setResponseCode(300);
+					setResponseMessage("Multiple Choices");
 					execPage(indexPages.get(key), sourceFile, path, client);
 					return;
 				}
@@ -301,6 +303,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 				setBody("text/html", getError());
 			} else {
 				setResponseCode(300);
+				setResponseMessage("Multiple Choices");
 				execPage(getContext().getDefaultIndexPage(), sourceFile, path, client);
 			}
 		}

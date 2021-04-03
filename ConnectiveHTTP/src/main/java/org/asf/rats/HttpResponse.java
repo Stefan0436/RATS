@@ -47,9 +47,9 @@ public class HttpResponse {
 	public HttpResponse setContent(String type, String body) {
 		if (type != null) {
 			headers.put("Content-Type", type);
-
-			if (body != null)
+			if (body != null) {
 				headers.put("Content-Length", Integer.toString(body.getBytes().length));
+			}
 		} else {
 			if (headers.containsKey("Content-Type"))
 				headers.remove("Content-Type");
@@ -243,7 +243,6 @@ public class HttpResponse {
 			output.write(resp.toString().getBytes());
 
 			body.transferTo(output);
-
 			body.close();
 			body = null;
 		} else {

@@ -131,6 +131,51 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 			}
 
 			File sourceFile = new File(getContext().getSourceDirectory(), path);
+
+			if (!sourceFile.exists()) {
+				if (path.contains(".")) {
+					String newPath = "";
+					String subPath = "";
+
+					String buffer = "";
+					boolean start = false;
+
+					for (char ch : path.toCharArray()) {
+						if (!start) {
+							if (ch == '.') {
+								start = true;
+							}
+							newPath += ch;
+						} else {
+							if (!subPath.isEmpty()) {
+								subPath += ch;
+							} else {
+								if (Character.isAlphabetic(ch) || Character.isDigit(ch)) {
+									buffer += ch;
+								} else {
+									if (ch == '/') {
+										subPath = "/";
+										newPath += buffer;
+									} else {
+										start = false;
+										newPath += buffer;
+										buffer = "";
+									}
+								}
+							}
+						}
+					}
+
+					if (!subPath.isEmpty()) {
+						sourceFile = new File(getContext().getSourceDirectory(), newPath);
+						if (sourceFile.exists()) {
+							path = newPath;
+							getRequest().subPath = subPath;
+						}
+					}
+				}
+			}
+
 			if (!sourceFile.exists() && contentType == null) {
 				setResponseCode(404);
 				setResponseMessage("File not found");
@@ -220,6 +265,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 				return;
 			}
 
+			boolean hasBeenExtended = false;
 			for (IFileExtensionProvider provider : getContext().getExtensions()) {
 				if (sourceFile.getName().endsWith(provider.fileExtension())) {
 
@@ -249,8 +295,13 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 					getResponse().body = strm;
 					file = inst.rewrite(getResponse(), getRequest());
 
+					hasBeenExtended = true;
 					break;
 				}
+			}
+			
+			if (!hasBeenExtended) {
+				this.setResponseHeader("Content-Length", Long.toString(sourceFile.length()));
 			}
 
 			this.setResponse(file.getRewrittenResponse());

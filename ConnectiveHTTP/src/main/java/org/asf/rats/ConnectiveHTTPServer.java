@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.BiFunction;
@@ -33,13 +35,22 @@ import org.asf.rats.processors.IAutoRegisterProcessor;
  * Memory keys:<br />
  * - <b>connective.http.props.autostart</b> - true to autostart, false
  * otherwise.<br />
- * - <b>connective.http.props.port</b> - server port
+ * - <b>connective.http.props.port</b> - server port -
+ * <b>connective.http.props.ip</b> - server ip
  * 
  * @author Stefan0436 - AerialWorks Software Foundation
  *
  */
 @CYAN_COMPONENT
 public class ConnectiveHTTPServer extends CyanComponent {
+
+	public ConnectiveHTTPServer() {
+		try {
+			ip = InetAddress.getByName("0.0.0.0");
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	protected double httpVersion = 1.1;
 	protected String protocol = "HTTP/%v";
@@ -65,6 +76,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	protected ArrayList<HttpUploadProcessor> uploadProcessors = new ArrayList<HttpUploadProcessor>();
 
 	protected int port = 8080;
+	protected InetAddress ip = null;
 
 	protected Thread serverProcessor = new Thread(() -> {
 		while (connected) {
@@ -171,6 +183,10 @@ public class ConnectiveHTTPServer extends CyanComponent {
 		if (portSetting == null)
 			portSetting = server.port;
 
+		InetAddress addr = Memory.getInstance().getOrCreate("connective.http.props.ip").getValue(InetAddress.class);
+		if (addr != null)
+			server.ip = addr;
+
 		server.port = portSetting;
 
 		if (autostart)
@@ -231,8 +247,8 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	/**
 	 * Called to construct a new server socket (override only)
 	 */
-	protected ServerSocket getServerSocket(int port) throws IOException {
-		return new ServerSocket(port);
+	protected ServerSocket getServerSocket(int port, InetAddress ip) throws IOException {
+		return new ServerSocket(port, 0, ip);
 	}
 
 	/**
@@ -298,11 +314,16 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				HttpUploadProcessor processor = impl.instanciate(this, msg);
 				processor.process((msg.headers.get("Content-Type") == null ? msg.headers.get("Content-type")
 						: msg.headers.get("Content-Type")), client, msg.method);
+				HttpResponse resp = processor.getResponse();
 
-				if (!msg.headers.containsKey("Connection") && !msg.headers.get("Connection").equals("Keep-Alive"))
-					closeConnection(processor.getResponse(), client);
+				if ((!msg.headers.containsKey("Connection") && !msg.headers.get("Connection").equals("Keep-Alive"))
+						|| (resp.headers.containsKey("Connection")
+								&& !resp.headers.get("Connection").equals("Keep-Alive")))
+					closeConnection(resp, client);
 				else {
-					processor.getResponse().addDefaultHeaders(this).build(outStreams.get(client));
+					resp.addDefaultHeaders(this);
+					resp.setConnectionState("Keep-Alive");
+					resp.build(outStreams.get(client));
 					outStreams.get(client).flush();
 				}
 			}
@@ -350,11 +371,16 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			if (compatible) {
 				HttpGetProcessor processor = impl.instanciate(this, msg);
 				processor.process(client);
+				HttpResponse resp = processor.getResponse();
 
-				if (!msg.headers.containsKey("Connection") && !msg.headers.get("Connection").equals("Keep-Alive"))
-					closeConnection(processor.getResponse(), client);
+				if ((!msg.headers.containsKey("Connection") && !msg.headers.get("Connection").equals("Keep-Alive"))
+						|| (resp.headers.containsKey("Connection")
+								&& !resp.headers.get("Connection").equals("Keep-Alive")))
+					closeConnection(resp, client);
 				else {
-					processor.getResponse().addDefaultHeaders(this).build(outStreams.get(client));
+					resp.addDefaultHeaders(this);
+					resp.setConnectionState("Keep-Alive");
+					resp.build(outStreams.get(client));
 					outStreams.get(client).flush();
 				}
 			}
@@ -487,7 +513,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			throw new IllegalStateException("Server already running!");
 
 		connected = true;
-		socket = getServerSocket(port);
+		socket = getServerSocket(port, ip);
 		serverProcessor.start();
 	}
 

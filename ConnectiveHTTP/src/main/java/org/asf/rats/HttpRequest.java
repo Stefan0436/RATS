@@ -22,6 +22,8 @@ public class HttpRequest {
 	public String path = "";
 	public String method = "";
 	public String version = "";
+	
+	public String subPath = "";
 
 	@Deprecated
 	public String body = null;

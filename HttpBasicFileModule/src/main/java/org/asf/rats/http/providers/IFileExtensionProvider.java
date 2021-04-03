@@ -33,4 +33,5 @@ public interface IFileExtensionProvider {
 	 * @return FileContext containing the rewritten file request.
 	 */
 	public FileContext rewrite(HttpResponse input, HttpRequest request);
+	
 }

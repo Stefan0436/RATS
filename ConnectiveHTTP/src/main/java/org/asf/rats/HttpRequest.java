@@ -38,6 +38,8 @@ public class HttpRequest {
 	 */
 	public static HttpRequest parse(InputStream request) throws IOException {
 		String firstLine = readStreamLine(request);
+		if (firstLine == null)
+			return null;
 
 		if (!firstLine.substring(0, 1).matches("[A-Za-z0-9]")) {
 			return null;
@@ -92,6 +94,8 @@ public class HttpRequest {
 		String buffer = "";
 		while (true) {
 			char ch = (char) strm.read();
+			if (ch == (char)-1)
+				return null;
 			if (ch == '\n') {
 				return buffer;
 			} else if (ch != '\r') {

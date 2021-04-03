@@ -77,42 +77,42 @@ public class ConnectiveHTTPServer extends CyanComponent {
 
 				Thread clientProcessor = new Thread(() -> {
 
-					HttpRequest msg = null;
-					try {
-						msg = HttpRequest.parse(in);
-						if (msg == null) {
-							HttpRequest dummy = new HttpRequest();
-							dummy.version = getPreferredProtocol();
-
-							closeConnection(dummy, 503, "Unsupported request", client);
-							dummy.close();
-						} else {
-							// change to different version system once http reaches 1.x.x (if it ever does)
-							if (Double.valueOf(msg.version.substring("HTTP/".length())) < httpVersion) {
-								HttpRequest dummy = new HttpRequest();
-								dummy.version = msg.version;
-
-								closeConnection(dummy, 505, "HTTP Version Not Supported", client);
-								dummy.close();
-							}
-
-							processRequest(client, msg);
-							msg.close();
-						}
-					} catch (IOException ex) {
-						if (!connected || ex instanceof SSLHandshakeException
-								|| (ex instanceof SocketException && (ex.getMessage().equals("Broken pipe")
-										|| ex.getMessage().equals("Connection reset by peer"))))
-							return;
-
-						error("Failed to process request", ex);
+					while (true) {
+						HttpRequest msg = null;
 						try {
+							msg = HttpRequest.parse(in);
 							if (msg == null) {
-								msg = new HttpRequest();
-								msg.version = getPreferredProtocol();
+								HttpRequest dummy = new HttpRequest();
+								dummy.version = getPreferredProtocol();
+
+								closeConnection(dummy, 503, "Unsupported request", client);
+								dummy.close();
+							} else {
+								// change to different version system once http reaches 1.x.x (if it ever does)
+								if (Double.valueOf(msg.version.substring("HTTP/".length())) < httpVersion) {
+									HttpRequest dummy = new HttpRequest();
+									dummy.version = msg.version;
+
+									closeConnection(dummy, 505, "HTTP Version Not Supported", client);
+									dummy.close();
+								}
+
+								processRequest(client, msg);
+								msg.close();
 							}
-							closeConnection(msg, 503, "Internal server error", client);
-						} catch (IOException ex2) {
+						} catch (IOException ex) {
+							if (!connected || ex instanceof SSLHandshakeException || ex instanceof SocketException)
+								return;
+
+							error("Failed to process request", ex);
+							try {
+								if (msg == null) {
+									msg = new HttpRequest();
+									msg.version = getPreferredProtocol();
+								}
+								closeConnection(msg, 503, "Internal server error", client);
+							} catch (IOException ex2) {
+							}
 						}
 					}
 
@@ -253,7 +253,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			}
 		}
 
-		if (msg.method.equals("POST") || msg.method.equals("PUT")) {
+		if (msg.method.equals("POST") || msg.method.equals("PUT") || msg.method.equals("DELETE")) {
 			HttpUploadProcessor impl = null;
 			for (HttpUploadProcessor proc : uploadProcessorLst) {
 				if (!proc.supportsChildPaths()) {
@@ -298,7 +298,13 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				HttpUploadProcessor processor = impl.instanciate(this, msg);
 				processor.process((msg.headers.get("Content-Type") == null ? msg.headers.get("Content-type")
 						: msg.headers.get("Content-Type")), client, msg.method);
-				closeConnection(processor.getResponse(), client);
+
+				if (!msg.headers.containsKey("Connection") && !msg.headers.get("Connection").equals("Keep-Alive"))
+					closeConnection(processor.getResponse(), client);
+				else {
+					processor.getResponse().addDefaultHeaders(this).build(outStreams.get(client));
+					outStreams.get(client).flush();
+				}
 			}
 		} else {
 			HttpGetProcessor impl = null;
@@ -345,12 +351,17 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				HttpGetProcessor processor = impl.instanciate(this, msg);
 				processor.process(client);
 
-				closeConnection(processor.getResponse(), client);
+				if (!msg.headers.containsKey("Connection") && !msg.headers.get("Connection").equals("Keep-Alive"))
+					closeConnection(processor.getResponse(), client);
+				else {
+					processor.getResponse().addDefaultHeaders(this).build(outStreams.get(client));
+					outStreams.get(client).flush();
+				}
 			}
 		}
 
 		if (!compatible) {
-			if (msg.method.equals("POST") || msg.method.equals("PUT")) {
+			if (msg.method.equals("POST") || msg.method.equals("PUT") || msg.method.equals("DELETE")) {
 				closeConnection(msg, 405, "Unsupported request", client);
 			} else {
 				closeConnection(msg, 404, "Command not found", client);

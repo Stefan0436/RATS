@@ -316,12 +316,30 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	/**
+	 * Sets the server ip address
+	 * 
+	 * @param ip Server ip
+	 */
+	public void setIp(InetAddress ip) {
+		this.ip = ip;
+	}
+
+	/**
 	 * Retrieves the server port
 	 * 
 	 * @return Server port
 	 */
 	public int getPort() {
 		return port;
+	}
+
+	/**
+	 * Retrieves the server ip
+	 * 
+	 * @return Server ip
+	 */
+	public InetAddress getIp() {
+		return ip;
 	}
 
 	/**

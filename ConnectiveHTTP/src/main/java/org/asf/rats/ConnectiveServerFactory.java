@@ -3,6 +3,7 @@ package org.asf.rats;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetAddress;
 
 /**
  * 
@@ -33,6 +34,7 @@ public class ConnectiveServerFactory {
 	}
 
 	private int port = -1;
+	private InetAddress ip = null;
 
 	private boolean locked = false;
 	private int options = 0;
@@ -56,6 +58,11 @@ public class ConnectiveServerFactory {
 	 * Assigns a port to the server, needed to use setPort.
 	 */
 	public static final int OPTION_ASSIGN_PORT = 0x30;
+
+	/**
+	 * Assigns an ip to the server, needed to use setIp.
+	 */
+	public static final int OPTION_ASSIGN_IP = 0x40;
 
 	/**
 	 * Sets building options
@@ -93,6 +100,17 @@ public class ConnectiveServerFactory {
 	}
 
 	/**
+	 * Assigns the default ip address, OPTION_ASSIGN_IP needs to be present for
+	 * this.
+	 * 
+	 * @param ip Default server ip
+	 */
+	public ConnectiveServerFactory setIp(InetAddress ip) {
+		this.ip = ip;
+		return this;
+	}
+
+	/**
 	 * Constructs the HTTP server. (locks the factory when building completes)
 	 * 
 	 * @return New ConnectiveHTTPServer instance.
@@ -120,6 +138,10 @@ public class ConnectiveServerFactory {
 
 		if (hasOption(OPTION_ASSIGN_PORT) && port != -1) {
 			server.setPort(port);
+		}
+
+		if (hasOption(OPTION_ASSIGN_IP) && ip != null) {
+			server.setIp(ip);
 		}
 
 		if (hasOption(OPTION_AUTOSTART)) {

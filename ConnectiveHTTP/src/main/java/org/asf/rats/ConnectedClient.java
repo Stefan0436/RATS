@@ -179,11 +179,12 @@ public class ConnectedClient extends CyanComponent {
 				if ((!msg.headers.containsKey("Connection") || !msg.headers.get("Connection").equals("Keep-Alive"))
 						|| (resp.headers.containsKey("Connection")
 								&& !resp.headers.get("Connection").equals("Keep-Alive"))
-						|| requestNumber == maxRequests)
+						|| (maxRequests != 0 && requestNumber == maxRequests))
 					closeConnection(resp, client);
 				else {
 					receiving = false;
-					requestNumber++;
+					if (maxRequests != 0)
+						requestNumber++;
 					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
 					keepAliveProcessor.start();
 					resp.addDefaultHeaders(server);
@@ -241,11 +242,12 @@ public class ConnectedClient extends CyanComponent {
 				if ((!msg.headers.containsKey("Connection") || !msg.headers.get("Connection").equals("Keep-Alive"))
 						|| (resp.headers.containsKey("Connection")
 								&& !resp.headers.get("Connection").equals("Keep-Alive"))
-						|| requestNumber == maxRequests)
+						|| (maxRequests != 0 && requestNumber == maxRequests))
 					closeConnection(resp, client);
 				else {
 					receiving = false;
-					requestNumber++;
+					if (maxRequests != 0)
+						requestNumber++;
 					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
 					keepAliveProcessor.start();
 					resp.addDefaultHeaders(server);

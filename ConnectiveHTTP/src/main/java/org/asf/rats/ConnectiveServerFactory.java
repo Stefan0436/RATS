@@ -47,22 +47,22 @@ public class ConnectiveServerFactory {
 	/**
 	 * Disables usage of module implementations.
 	 */
-	public static final int OPTION_DISABLE_MODULE_IMPLEMENTATIONS = 0x10;
+	public static final int OPTION_DISABLE_MODULE_IMPLEMENTATIONS = 0x1 << 1;
 
 	/**
 	 * Automatically starts the server on build.
 	 */
-	public static final int OPTION_AUTOSTART = 0x20;
+	public static final int OPTION_AUTOSTART = 0x1 << 2;
 
 	/**
 	 * Assigns a port to the server, needed to use setPort.
 	 */
-	public static final int OPTION_ASSIGN_PORT = 0x30;
+	public static final int OPTION_ASSIGN_PORT = 0x1 << 3;
 
 	/**
 	 * Assigns an ip to the server, needed to use setIp.
 	 */
-	public static final int OPTION_ASSIGN_IP = 0x40;
+	public static final int OPTION_ASSIGN_IP = 0x1 << 4;
 
 	/**
 	 * Sets building options

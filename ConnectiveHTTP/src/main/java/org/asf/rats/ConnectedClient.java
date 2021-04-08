@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 
-import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLException;
 
 import org.asf.cyan.api.common.CyanComponent;
 import org.asf.rats.processors.HttpGetProcessor;
@@ -330,7 +330,7 @@ public class ConnectedClient extends CyanComponent {
 					msg.close();
 				}
 			} catch (IOException ex) {
-				if (!server.connected || ex instanceof SSLHandshakeException || ex instanceof SocketException)
+				if (!server.connected || ex instanceof SSLException || ex instanceof SocketException)
 					return;
 
 				error("Failed to process request", ex);

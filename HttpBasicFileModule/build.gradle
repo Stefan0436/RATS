@@ -64,5 +64,5 @@ dependencies {
 	implementation project(':RatsMemory')
 	
 	implementation group: 'javax.activation', name: 'activation', version: '1.1.1'
-	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
+	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A5'
 }

@@ -71,6 +71,6 @@ dependencies {
 	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-COMMUNICATION', version: '0.0.0.12'
 	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-PACKETPROCESSING', version: '0.0.0.12'
 	
-	implementation group: 'org.asf.cyan', name: 'CyanUtil', version: '1.0.0.A4'
-	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
+	implementation group: 'org.asf.cyan', name: 'CyanUtil', version: '1.0.0.A5'
+	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A5'
 }

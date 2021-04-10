@@ -52,6 +52,9 @@ public class HttpRequest {
 		if (msg.path.contains("?")) {
 			msg.query = msg.path.substring(msg.path.lastIndexOf("?") + 1);
 			msg.path = msg.path.substring(0, msg.path.lastIndexOf("?"));
+		} else if (msg.path.contains("&")) {
+			msg.query = msg.path.substring(msg.path.indexOf("&") + 1);
+			msg.path = msg.path.substring(0, msg.path.indexOf("&"));
 		}
 		msg.path = URLDecoder.decode(msg.path, "UTF-8");
 

@@ -65,7 +65,7 @@ public class HttpRequest {
 		while (msg.path.contains("//")) {
 			msg.path = msg.path.replace("//", "/");
 		}
-		msg.method = mainHeader[0];
+		msg.method = mainHeader[0].toUpperCase();
 		msg.version = mainHeader[2];
 
 		while (true) {

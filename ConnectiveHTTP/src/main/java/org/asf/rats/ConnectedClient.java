@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.stream.Stream;
 
 import javax.net.ssl.SSLException;
 
@@ -21,6 +22,8 @@ import org.asf.rats.processors.HttpUploadProcessor;
  *
  */
 public class ConnectedClient extends CyanComponent {
+	protected static String[] uploadMethods = new String[] { "POST", "PUT", "DELETE", "PATCH" };
+
 	protected static int timeout = 5;
 	protected static int maxRequests = 1000;
 
@@ -129,7 +132,7 @@ public class ConnectedClient extends CyanComponent {
 			}
 		}
 
-		if (msg.method.equals("POST") || msg.method.equals("PUT") || msg.method.equals("DELETE")) {
+		if (Stream.of(uploadMethods).anyMatch(t -> t.equals(msg.method))) {
 			HttpUploadProcessor impl = null;
 			for (HttpUploadProcessor proc : uploadProcessorLst) {
 				if (!proc.supportsChildPaths()) {

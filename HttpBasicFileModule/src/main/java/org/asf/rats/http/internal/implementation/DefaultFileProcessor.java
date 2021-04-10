@@ -299,7 +299,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 					break;
 				}
 			}
-			
+
 			if (!hasBeenExtended) {
 				this.setResponseHeader("Content-Length", Long.toString(sourceFile.length()));
 			}

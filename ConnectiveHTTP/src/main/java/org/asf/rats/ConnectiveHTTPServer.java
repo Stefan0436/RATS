@@ -65,15 +65,6 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	protected boolean connected = false;
 	protected ServerSocket socket = null;
 
-	@Deprecated
-	protected ArrayList<Socket> sockets = new ArrayList<Socket>();
-
-	@Deprecated
-	protected HashMap<Socket, InputStream> inStreams = new HashMap<Socket, InputStream>();
-
-	@Deprecated
-	protected HashMap<Socket, OutputStream> outStreams = new HashMap<Socket, OutputStream>();
-
 	protected ArrayList<ConnectedClient> clients = new ArrayList<ConnectedClient>();
 
 	protected ArrayList<HttpGetProcessor> getProcessors = new ArrayList<HttpGetProcessor>();
@@ -275,33 +266,14 @@ public class ConnectiveHTTPServer extends CyanComponent {
 			return;
 
 		connected = false;
-		for (InputStream strm : inStreams.values()) {
-			try {
-				strm.close();
-			} catch (IOException e) {
-			}
-		}
-		for (OutputStream strm : outStreams.values()) {
-			try {
-				strm.close();
-			} catch (IOException e) {
-			}
-		}
-		for (Socket soc : sockets) {
-			try {
-				soc.close();
-			} catch (IOException e) {
-			}
+		for (ConnectedClient client : new ArrayList<ConnectedClient>(clients)) {
+			client.closeConnection();
 		}
 
 		try {
 			socket.close();
 		} catch (IOException e) {
 		}
-
-		sockets.clear();
-		inStreams.clear();
-		outStreams.clear();
 
 		socket = null;
 	}

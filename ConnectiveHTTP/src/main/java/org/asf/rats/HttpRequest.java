@@ -46,9 +46,8 @@ public class HttpRequest {
 		}
 
 		HttpRequest msg = new HttpRequest();
-		String[] mainHeader = firstLine.split(" ");
 
-		msg.path = mainHeader[1].replace("\\", "/");
+		msg.path = firstLine.substring(firstLine.indexOf(" ") + 1, firstLine.lastIndexOf(" "));
 		if (msg.path.contains("?")) {
 			msg.query = msg.path.substring(msg.path.lastIndexOf("?") + 1);
 			msg.path = msg.path.substring(0, msg.path.lastIndexOf("?"));
@@ -61,8 +60,8 @@ public class HttpRequest {
 		while (msg.path.contains("//")) {
 			msg.path = msg.path.replace("//", "/");
 		}
-		msg.method = mainHeader[0].toUpperCase();
-		msg.version = mainHeader[2];
+		msg.method = firstLine.substring(0, firstLine.indexOf(" ")).toUpperCase();
+		msg.version = firstLine.substring(firstLine.lastIndexOf(" ") + 1);
 
 		while (true) {
 			String line = readStreamLine(request);

@@ -40,7 +40,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 
 	@Override
 	public void process(String path, String contentType, Socket client, String method) {
-		if (path.startsWith("..")) {
+		if (path.contains("..")) {
 			setResponseCode(403);
 			setResponseMessage("Access to parent directories denied");
 			setBody("text/html", getError());

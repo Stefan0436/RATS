@@ -3,6 +3,7 @@ package org.asf.rats.http;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IFileAlias;
@@ -24,6 +25,8 @@ public class ProviderContext {
 	protected ProviderContext() {
 	}
 
+	protected String id = UUID.randomUUID() + "-" + System.currentTimeMillis();
+	
 	protected IndexPageProvider defaultIndexPage = null;
 	protected HashMap<String, IndexPageProvider> altIndexPages = new HashMap<String, IndexPageProvider>();
 
@@ -69,6 +72,10 @@ public class ProviderContext {
 
 	public IVirtualFileProvider[] getVirtualFiles() {
 		return virtualFiles.toArray(t -> new IVirtualFileProvider[t]);
+	}
+
+	public String getID() {
+		return id;
 	}
 
 }

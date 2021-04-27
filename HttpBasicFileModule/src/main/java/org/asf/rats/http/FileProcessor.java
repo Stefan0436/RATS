@@ -113,8 +113,8 @@ public class FileProcessor {
 	 */
 	public static FileProcessor forContext(ProviderContext context, String virtualRoot) {
 
-		if (instanciatedProcessors.containsKey(virtualRoot))
-			return instanciatedProcessors.get(virtualRoot);
+		if (instanciatedProcessors.containsKey(virtualRoot + "@" + context.getID()))
+			return instanciatedProcessors.get(virtualRoot + "@" + context.getID());
 
 		ProcessorAbstract inst = ProcessorAbstract.instanciateBase(virtualRoot, context);
 		FileProcessor processor = toProcessor(inst);

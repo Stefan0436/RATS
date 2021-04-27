@@ -4,8 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 
@@ -22,7 +20,7 @@ public class HttpRequest {
 	public String path = "";
 	public String method = "";
 	public String version = "";
-	
+
 	public String subPath = "";
 
 	@Deprecated
@@ -48,25 +46,22 @@ public class HttpRequest {
 		}
 
 		HttpRequest msg = new HttpRequest();
-		String[] mainHeader = firstLine.split(" ");
-		URI req;
-		try {
-			req = new URI(mainHeader[1]);
-			msg.path = req.getPath();
-			msg.query = req.getQuery();
-		} catch (URISyntaxException e) {
-			msg.path = mainHeader[1].replace("\\", "/");
-			if (msg.path.contains("?")) {
-				msg.query = msg.path.substring(msg.path.lastIndexOf("?") + 1);
-				msg.path = msg.path.substring(0, msg.path.lastIndexOf("?"));
-			}
-			msg.path = URLDecoder.decode(msg.path, "UTF-8");
+
+		msg.path = firstLine.substring(firstLine.indexOf(" ") + 1, firstLine.lastIndexOf(" "));
+		if (msg.path.contains("?")) {
+			msg.query = msg.path.substring(msg.path.lastIndexOf("?") + 1);
+			msg.path = msg.path.substring(0, msg.path.lastIndexOf("?"));
+		} else if (msg.path.contains("&")) {
+			msg.query = msg.path.substring(msg.path.indexOf("&") + 1);
+			msg.path = msg.path.substring(0, msg.path.indexOf("&"));
 		}
+		msg.path = URLDecoder.decode(msg.path, "UTF-8");
+
 		while (msg.path.contains("//")) {
 			msg.path = msg.path.replace("//", "/");
 		}
-		msg.method = mainHeader[0];
-		msg.version = mainHeader[2];
+		msg.method = firstLine.substring(0, firstLine.indexOf(" ")).toUpperCase();
+		msg.version = firstLine.substring(firstLine.lastIndexOf(" ") + 1);
 
 		while (true) {
 			String line = readStreamLine(request);
@@ -96,7 +91,7 @@ public class HttpRequest {
 		String buffer = "";
 		while (true) {
 			char ch = (char) strm.read();
-			if (ch == (char)-1)
+			if (ch == (char) -1)
 				return null;
 			if (ch == '\n') {
 				return buffer;

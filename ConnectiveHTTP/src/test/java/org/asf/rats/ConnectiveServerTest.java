@@ -62,7 +62,7 @@ public class ConnectiveServerTest {
 		testServer.start();
 		testServer.registerProcessor(new TestProc());
 
-		URL u = new URL("http://localhost:" + testServer.getPort() + "/test");
+		URL u = new URL("http://localhost:" + testServer.getPort() + "/test?test=hi&test2=hello");
 		InputStream strm = u.openStream();
 		byte[] test = strm.readAllBytes();
 		strm.close();

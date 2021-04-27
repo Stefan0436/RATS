@@ -70,5 +70,5 @@ dependencies {
 	implementation project(':HttpServiceModule')
 	implementation project(':HttpBasicFileModule')
 
-	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
+	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A5'
 }

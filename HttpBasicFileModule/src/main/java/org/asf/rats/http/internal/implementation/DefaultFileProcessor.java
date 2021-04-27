@@ -140,9 +140,10 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 					String buffer = "";
 					boolean start = false;
 
+					int i = 0;
 					for (char ch : path.toCharArray()) {
 						if (!start) {
-							if (ch == '.') {
+							if (ch == '.' && !path.substring(i + 1).contains(".")) {
 								start = true;
 							}
 							newPath += ch;
@@ -164,6 +165,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 								}
 							}
 						}
+						i++;
 					}
 
 					if (!subPath.isEmpty()) {
@@ -299,7 +301,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 					break;
 				}
 			}
-			
+
 			if (!hasBeenExtended) {
 				this.setResponseHeader("Content-Length", Long.toString(sourceFile.length()));
 			}

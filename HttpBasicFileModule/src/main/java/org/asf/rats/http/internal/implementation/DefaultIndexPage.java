@@ -32,8 +32,8 @@ public class DefaultIndexPage extends IndexPageProvider implements IContextRootP
 		}
 
 		if (data != null) {
-			str = str.replaceAll("\\%c-name\\%", name);
-			str = str.replaceAll("\\%c-path\\%", path);
+			str = str.replace("%c-name%", name);
+			str = str.replace("%c-path%", path);
 		}
 
 		if (files != null) {
@@ -147,12 +147,12 @@ public class DefaultIndexPage extends IndexPageProvider implements IContextRootP
 		if (prettyPath.endsWith("/") && !prettyPath.equals("/"))
 			prettyPath = prettyPath.substring(0, prettyPath.length() - 1);
 
-		str = str.replaceAll("\\%path\\%", path);
-		str = str.replaceAll("\\%path-pretty\\%", prettyPath);
-		str = str.replaceAll("\\%name\\%", name);
-		str = str.replaceAll("\\%up-path\\%", (path.equals("/") || path.isEmpty()) ? "" : new File(path).getParent());
-		str = str.replaceAll("\\%server-name\\%", getServer().getName());
-		str = str.replaceAll("\\%server-version\\%", getServer().getVersion());
+		str = str.replace("%path%", path);
+		str = str.replace("%path-pretty%", prettyPath);
+		str = str.replace("%name%", name);
+		str = str.replace("%up-path%", (path.equals("/") || path.isEmpty()) ? "" : new File(path).getParent());
+		str = str.replace("%server-name%", getServer().getName());
+		str = str.replace("%server-version%", getServer().getVersion());
 
 		return str;
 	}

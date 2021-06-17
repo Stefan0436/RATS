@@ -38,7 +38,7 @@ public class HttpRequest {
 	 */
 	public static HttpRequest parse(InputStream request) throws IOException {
 		String firstLine = readStreamLine(request);
-		if (firstLine == null)
+		if (firstLine == null || firstLine.isEmpty())
 			return null;
 
 		if (!firstLine.substring(0, 1).matches("[A-Za-z0-9]")) {

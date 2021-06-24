@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
 import org.asf.rats.HttpResponse;
 import org.asf.rats.http.FileContext;
@@ -367,22 +368,26 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 	}
 
 	protected void execPage(IndexPageProvider page, File sourceFile, String path, Socket client) {
-		File[] files = sourceFile.listFiles(new FileFilter() {
+		File[] files = Stream.of(sourceFile.listFiles(new FileFilter() {
 
 			@Override
 			public boolean accept(File arg0) {
 				return !arg0.isDirectory();
 			}
 
-		});
-		File[] dirs = sourceFile.listFiles(new FileFilter() {
+		})).sorted((t1, t2) -> {
+			return t1.getName().compareTo(t2.getName());
+		}).toArray(t -> new File[t]);
+		File[] dirs = Stream.of(sourceFile.listFiles(new FileFilter() {
 
 			@Override
 			public boolean accept(File arg0) {
 				return arg0.isDirectory();
 			}
 
-		});
+		})).sorted((t1, t2) -> {
+			return t1.getName().compareTo(t2.getName());
+		}).toArray(t -> new File[t]);
 
 		IndexPageProvider inst = page.instanciate(files, dirs, getServer(), getRequest(), getResponse(), path);
 		if (inst instanceof IContextProviderExtension) {

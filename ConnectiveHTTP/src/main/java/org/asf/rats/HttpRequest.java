@@ -41,7 +41,7 @@ public class HttpRequest {
 		if (firstLine == null || firstLine.isEmpty())
 			return null;
 
-		if (!firstLine.substring(0, 1).matches("[A-Za-z0-9]")) {
+		if (!firstLine.substring(0, 1).matches("[A-Za-z0-9]") || firstLine.split(" ").length < 3) {
 			return null;
 		}
 

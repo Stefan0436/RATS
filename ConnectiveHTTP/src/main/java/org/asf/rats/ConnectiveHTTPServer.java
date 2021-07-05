@@ -229,11 +229,11 @@ public class ConnectiveHTTPServer extends CyanComponent {
 
 							String str = htmlCache;
 
-							str = str.replaceAll("\\%path\\%", request.path);
-							str = str.replaceAll("\\%server-name\\%", getName());
-							str = str.replaceAll("\\%server-version\\%", getVersion());
-							str = str.replaceAll("\\%error-status\\%", Integer.toString(response.status));
-							str = str.replaceAll("\\%error-message\\%", response.message);
+							str = str.replace("%path%", request.path);
+							str = str.replace("%server-name%", getName());
+							str = str.replace("%server-version%", getVersion());
+							str = str.replace("%error-status%", Integer.toString(response.status));
+							str = str.replace("%error-message%", response.message);
 
 							return str;
 						}

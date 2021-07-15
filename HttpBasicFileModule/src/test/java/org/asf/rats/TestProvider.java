@@ -5,11 +5,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Base64;
+import java.util.function.Consumer;
 
 import org.asf.rats.http.IAutoContextBuilder;
 import org.asf.rats.http.ProviderContext;
 import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IContextProviderExtension;
+import org.asf.rats.http.providers.IDocumentPostProcessor;
 import org.asf.rats.http.providers.IPathProviderExtension;
 
 public class TestProvider implements IAutoContextBuilder {
@@ -25,8 +27,47 @@ public class TestProvider implements IAutoContextBuilder {
 	}
 
 	@Override
+	public IDocumentPostProcessor[] documentPostProcessors() {
+		return new IDocumentPostProcessor[] { new TestDocumentPostProcessor() };
+	}
+
+	@Override
 	public FileUploadHandler[] uploadHandlers() {
-		return new FileUploadHandler[] { new DefaultUploadHandler("maven", "/maven", null) } ;
+		return new FileUploadHandler[] { new DefaultUploadHandler("maven", "/maven", null) };
+	}
+
+	public static class TestDocumentPostProcessor implements IDocumentPostProcessor {
+
+		@Override
+		public boolean match(String path, HttpRequest request) {
+			return true;
+		}
+
+		@Override
+		public IDocumentPostProcessor newInstance() {
+			return new TestDocumentPostProcessor();
+		}
+
+		@Override
+		public void process(String path, String uploadMediaType, HttpRequest request, HttpResponse response,
+				Socket client, String method) {
+			writeLine("<div style=\"width: 0; height: 0\">\n"
+					+ "    <div id=\"warning\" style=\"position: absolute; margin: 0px; float: right; height: 10px; width: 99%; bottom: 10px; border-top: 5px solid red\">WARNING!</div>\n"
+					+ "</div>");
+		}
+
+		private Consumer<String> callback;
+
+		@Override
+		public void setWriteCallback(Consumer<String> callback) {
+			this.callback = callback;
+		}
+
+		@Override
+		public Consumer<String> getWriteCallback() {
+			return callback;
+		}
+
 	}
 
 	public static class DefaultUploadHandler extends FileUploadHandler
@@ -98,8 +139,9 @@ public class TestProvider implements IAutoContextBuilder {
 							strm.close();
 
 							if (existed) {
-								// I know you are supposed to return 204, but gradle doesn't like that from our system
-								this.setResponseCode(201); 
+								// I know you are supposed to return 204, but gradle doesn't like that from our
+								// system
+								this.setResponseCode(201);
 								this.setResponseMessage("Updated");
 								this.setBody("");
 							} else {

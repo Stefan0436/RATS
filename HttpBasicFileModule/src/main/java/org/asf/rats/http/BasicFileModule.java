@@ -52,6 +52,7 @@ public class BasicFileModule extends CyanComponent {
 							factory.addProcessors(contBuilder.getHandlers());
 							factory.addRestrictions(contBuilder.restrictions());
 							factory.addIndexPages(contBuilder.altIndexPages());
+							factory.addDocumentPostProcessors(contBuilder.documentPostProcessors());
 
 							for (Class<IAutoContextModificationProvider> provider : providers) {
 								try {

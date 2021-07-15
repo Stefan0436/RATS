@@ -38,6 +38,16 @@ public class FileContext {
 	}
 
 	/**
+	 * Retrieves the current document stream
+	 * 
+	 * @since ASF Connective 1.0.0.A4
+	 * @return Document InputStream
+	 */
+	public InputStream getCurrentStream() {
+		return file;
+	}
+
+	/**
 	 * Creates the re-written HTTP response.
 	 * 
 	 * @return Rewritten HttpResponse instance.

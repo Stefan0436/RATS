@@ -9,6 +9,7 @@ import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
+import org.asf.rats.http.providers.IDocumentPostProcessor;
 import org.asf.rats.http.providers.IVirtualFileProvider;
 import org.asf.rats.http.providers.IndexPageProvider;
 import org.asf.rats.processors.HttpGetProcessor;
@@ -26,7 +27,7 @@ public class ProviderContext {
 	}
 
 	protected String id = UUID.randomUUID() + "-" + System.currentTimeMillis();
-	
+
 	protected IndexPageProvider defaultIndexPage = null;
 	protected HashMap<String, IndexPageProvider> altIndexPages = new HashMap<String, IndexPageProvider>();
 
@@ -37,6 +38,11 @@ public class ProviderContext {
 	protected ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
 	protected ArrayList<FileUploadHandler> uploadHandlers = new ArrayList<FileUploadHandler>();
 	protected ArrayList<HttpGetProcessor> processors = new ArrayList<HttpGetProcessor>();
+	protected ArrayList<IDocumentPostProcessor> documentPostProcessors = new ArrayList<IDocumentPostProcessor>();
+
+	public IDocumentPostProcessor[] getDocumentPostProcessors() {
+		return documentPostProcessors.toArray(t -> new IDocumentPostProcessor[t]);
+	}
 
 	public HttpGetProcessor[] getProcessors() {
 		return processors.toArray(t -> new HttpGetProcessor[t]);

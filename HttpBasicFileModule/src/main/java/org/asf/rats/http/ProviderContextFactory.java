@@ -7,6 +7,7 @@ import java.util.Map;
 import org.asf.rats.http.internal.implementation.DefaultIndexPage;
 import org.asf.rats.http.internal.processors.MainFileProcessor;
 import org.asf.rats.http.providers.FileUploadHandler;
+import org.asf.rats.http.providers.IDocumentPostProcessor;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
@@ -83,6 +84,12 @@ public class ProviderContextFactory {
 	protected ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
 	protected ArrayList<FileUploadHandler> uploadHandlers = new ArrayList<FileUploadHandler>();
 	protected ArrayList<HttpGetProcessor> extraProcessors = new ArrayList<HttpGetProcessor>();
+	protected ArrayList<IDocumentPostProcessor> documentPostProcessors = new ArrayList<IDocumentPostProcessor>();
+
+	public ProviderContextFactory addDocumentPostProcessor(IDocumentPostProcessor processor) {
+		documentPostProcessors.add(processor);
+		return this;
+	}
 
 	public ProviderContextFactory addProcessor(HttpGetProcessor processor) {
 		extraProcessors.add(processor);
@@ -208,7 +215,7 @@ public class ProviderContextFactory {
 			location = (System.getProperty("rats.config.dir") == null ? "." : System.getProperty("rats.config.dir"))
 					+ "/" + location;
 		}
-		
+
 		path = location;
 		return this;
 	}
@@ -258,7 +265,7 @@ public class ProviderContextFactory {
 		if (!hasOption(OPTION_DISABLE_MAIN_PROCESSOR)) {
 			if (!file.startsWith("/"))
 				file = "/" + file;
-			
+
 			context.processors.add(new MainFileProcessor(file, context));
 		}
 
@@ -269,23 +276,26 @@ public class ProviderContextFactory {
 		context.virtualFiles.addAll(virtualFiles);
 		context.processors.addAll(extraProcessors);
 		context.altIndexPages.putAll(altIndexPages);
+		context.documentPostProcessors.addAll(documentPostProcessors);
 
 		locked = true;
 		return context;
 	}
 
-	/**
-	 * Adds an index page to the context
-	 */
-	public void addIndexPage(String path, IndexPageProvider page) {
+	public ProviderContextFactory addIndexPage(String path, IndexPageProvider page) {
 		altIndexPages.put(path, page);
+		return this;
 	}
-	
-	/**
-	 * Adds a map of index pages to the context
-	 */
-	public void addIndexPages(Map<String, IndexPageProvider> altIndexPages) {
+
+	public ProviderContextFactory addIndexPages(Map<String, IndexPageProvider> altIndexPages) {
 		this.altIndexPages.putAll(altIndexPages);
+		return this;
+	}
+
+	public ProviderContextFactory addDocumentPostProcessors(IDocumentPostProcessor... processors) {
+		for (IDocumentPostProcessor proc : processors)
+			addDocumentPostProcessor(proc);
+		return this;
 	}
 
 }

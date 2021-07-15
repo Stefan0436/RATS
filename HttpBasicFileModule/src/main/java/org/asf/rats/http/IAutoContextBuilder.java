@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.asf.rats.http.internal.implementation.DefaultIndexPage;
 import org.asf.rats.http.providers.FileUploadHandler;
+import org.asf.rats.http.providers.IDocumentPostProcessor;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
@@ -83,6 +84,15 @@ public interface IAutoContextBuilder {
 	 */
 	public default IFileRestrictionProvider[] restrictions() {
 		return new IFileRestrictionProvider[0];
+	}
+
+	/**
+	 * Retrieves the document post-processors.
+	 * 
+	 * @since ASF Connective 1.0.0.A4
+	 */
+	public default IDocumentPostProcessor[] documentPostProcessors() {
+		return new IDocumentPostProcessor[0];
 	}
 
 }

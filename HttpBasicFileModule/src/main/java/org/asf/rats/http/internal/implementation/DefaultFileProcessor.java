@@ -51,6 +51,37 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 			setBody("text/html", getError());
 		} else {
 			path = "/" + path;
+
+			for (IVirtualFileProvider provider : getContext().getVirtualFiles()) {
+				if (((contentType == null && !method.equals("DELETE")) || provider.supportsUpload())
+						&& provider.match(path, getRequest())) {
+
+					IVirtualFileProvider file = provider.newInstance();
+
+					if (file instanceof IContextProviderExtension) {
+						((IContextProviderExtension) file).provide(getContext());
+					}
+					if (file instanceof IServerProviderExtension) {
+						((IServerProviderExtension) file).provide(getServer());
+					}
+					if (file instanceof IClientSocketProvider) {
+						((IClientSocketProvider) file).provide(client);
+					}
+					if (file instanceof IContextRootProviderExtension) {
+						((IContextRootProviderExtension) file).provideVirtualRoot(getContextRoot());
+					}
+
+					setResponseCode(200);
+					file.process(path, contentType, getRequest(), getResponse(), client, method);
+
+					if (this.getResponse().body == null) {
+						this.setBody("text/html", this.getError());
+					}
+
+					return;
+				}
+			}
+			
 			for (IFileAlias provider : getContext().getAliases()) {
 				if (provider.match(getRequest(), path)) {
 					IFileAlias alias = provider.newInstance();
@@ -102,36 +133,6 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 
 						return;
 					}
-				}
-			}
-
-			for (IVirtualFileProvider provider : getContext().getVirtualFiles()) {
-				if (((contentType == null && !method.equals("DELETE")) || provider.supportsUpload())
-						&& provider.match(path, getRequest())) {
-
-					IVirtualFileProvider file = provider.newInstance();
-
-					if (file instanceof IContextProviderExtension) {
-						((IContextProviderExtension) file).provide(getContext());
-					}
-					if (file instanceof IServerProviderExtension) {
-						((IServerProviderExtension) file).provide(getServer());
-					}
-					if (file instanceof IClientSocketProvider) {
-						((IClientSocketProvider) file).provide(client);
-					}
-					if (file instanceof IContextRootProviderExtension) {
-						((IContextRootProviderExtension) file).provideVirtualRoot(getContextRoot());
-					}
-
-					setResponseCode(200);
-					file.process(path, contentType, getRequest(), getResponse(), client, method);
-
-					if (this.getResponse().body == null) {
-						this.setBody("text/html", this.getError());
-					}
-
-					return;
 				}
 			}
 

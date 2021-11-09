@@ -139,6 +139,41 @@ public class HttpResponse {
 	}
 
 	/**
+	 * Adds redirect headers
+	 * 
+	 * @param destination Redirect address
+	 */
+	public HttpResponse redirect(String destination) {
+		return redirect(destination, 302, "Found");
+	}
+
+	/**
+	 * Adds redirect headers
+	 * 
+	 * @param destination Redirect address
+	 * @param status      New status code
+	 * @param message     New status message
+	 */
+	public HttpResponse redirect(String destination, int status, String message) {
+		this.status = status;
+		this.message = message;
+		setHeader("Location", destination);
+		return this;
+	}
+
+	/**
+	 * Assigns a new response status
+	 * 
+	 * @param status  New status code
+	 * @param message New status message
+	 */
+	public HttpResponse setResponseStatus(int status, String message) {
+		this.status = status;
+		this.message = message;
+		return this;
+	}
+
+	/**
 	 * Sets a header
 	 * 
 	 * @param header Header name

@@ -60,7 +60,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	protected String name = "ASF Connective";
-	protected String version = "1.0.0.A5";
+	protected String version = "1.0.0.A6";
 
 	protected boolean connected = false;
 	protected ServerSocket socket = null;

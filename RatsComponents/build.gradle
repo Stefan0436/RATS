@@ -64,6 +64,6 @@ dependencies {
 	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A5'
 	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.12'
 	
-	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
-	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.0'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.0'
 }

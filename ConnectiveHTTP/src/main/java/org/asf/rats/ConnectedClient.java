@@ -24,8 +24,8 @@ import org.asf.rats.processors.HttpUploadProcessor;
 public class ConnectedClient extends CyanComponent {
 	protected static String[] uploadMethods = new String[] { "POST", "PUT", "DELETE", "PATCH" };
 
-	protected static int timeout = 5;
-	protected static int maxRequests = 1000;
+	protected static int timeout = 0;
+	protected static int maxRequests = 0;
 
 	protected Socket client;
 	protected OutputStream output;
@@ -114,11 +114,13 @@ public class ConnectedClient extends CyanComponent {
 	 */
 	protected void processRequest(HttpRequest msg) throws IOException {
 		receiving = true;
-		while (!keepAliveTHEnd) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				break;
+		if (timeout != 0) {
+			while (!keepAliveTHEnd) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					break;
+				}
 			}
 		}
 
@@ -179,19 +181,49 @@ public class ConnectedClient extends CyanComponent {
 						: msg.headers.get("Content-Type")), client, msg.method);
 				HttpResponse resp = processor.getResponse();
 
-				if ((!msg.headers.containsKey("Connection") || !msg.headers.get("Connection").equals("Keep-Alive"))
-						|| (resp.headers.containsKey("Connection")
-								&& !resp.headers.get("Connection").equals("Keep-Alive"))
-						|| (maxRequests != 0 && requestNumber == maxRequests))
+				if ((!resp.headers.containsKey("Connection")
+						|| !resp.headers.get("Connection").equalsIgnoreCase("Keep-Alive"))
+						|| (maxRequests != 0 && requestNumber >= maxRequests))
 					closeConnection(resp, client);
 				else {
 					receiving = false;
+					resp.addDefaultHeaders(server);
+					if (resp.headers.containsKey("Keep-Alive")) {
+						// Set values from existing header
+						String keepAliveInfo = resp.headers.get("Keep-Alive");
+						timeout = 0;
+						maxRequests = 0;
+						for (String entry : keepAliveInfo.split(", ")) {
+							// Parse
+							if (entry.contains("=")) {
+								String key = entry.substring(0, entry.indexOf("="));
+								String value = entry.substring(entry.indexOf("=") + 1);
+								switch (key) {
+
+								case "timeout": {
+									if (value.matches("^[0-9]+$"))
+										timeout = Integer.parseInt(value);
+									break;
+								}
+								case "max": {
+									if (value.matches("^[0-9]+$"))
+										maxRequests = Integer.parseInt(value);
+									break;
+								}
+
+								}
+							}
+						}
+					} else if (timeout != 0 || maxRequests != 0)
+						resp.setHeader("Keep-Alive", "timeout=" + timeout + ", max=" + maxRequests);
 					if (maxRequests != 0)
 						requestNumber++;
-					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
-					keepAliveProcessor.start();
-					resp.addDefaultHeaders(server);
-					resp.setHeader("Keep-Alive", "timeout=" + timeout + ", max=" + maxRequests);
+					else
+						requestNumber = 0;
+					if (timeout != 0) {
+						keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
+						keepAliveProcessor.start();
+					}
 					resp.setConnectionState("Keep-Alive");
 					resp.build(output);
 				}
@@ -242,19 +274,49 @@ public class ConnectedClient extends CyanComponent {
 				processor.process(client);
 				HttpResponse resp = processor.getResponse();
 
-				if ((!msg.headers.containsKey("Connection") || !msg.headers.get("Connection").equals("Keep-Alive"))
-						|| (resp.headers.containsKey("Connection")
-								&& !resp.headers.get("Connection").equals("Keep-Alive"))
-						|| (maxRequests != 0 && requestNumber == maxRequests))
+				if ((!resp.headers.containsKey("Connection")
+						|| !resp.headers.get("Connection").equalsIgnoreCase("Keep-Alive"))
+						|| (maxRequests != 0 && requestNumber >= maxRequests))
 					closeConnection(resp, client);
 				else {
 					receiving = false;
+					resp.addDefaultHeaders(server);
+					if (resp.headers.containsKey("Keep-Alive")) {
+						// Set values from existing header
+						String keepAliveInfo = resp.headers.get("Keep-Alive");
+						timeout = 0;
+						maxRequests = 0;
+						for (String entry : keepAliveInfo.split(", ")) {
+							// Parse
+							if (entry.contains("=")) {
+								String key = entry.substring(0, entry.indexOf("="));
+								String value = entry.substring(entry.indexOf("=") + 1);
+								switch (key) {
+
+								case "timeout": {
+									if (value.matches("^[0-9]+$"))
+										timeout = Integer.parseInt(value);
+									break;
+								}
+								case "max": {
+									if (value.matches("^[0-9]+$"))
+										maxRequests = Integer.parseInt(value);
+									break;
+								}
+
+								}
+							}
+						}
+					} else
+						resp.setHeader("Keep-Alive", "timeout=" + timeout + ", max=" + maxRequests);
+					if (timeout != 0) {
+						keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
+						keepAliveProcessor.start();
+					}
 					if (maxRequests != 0)
 						requestNumber++;
-					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
-					keepAliveProcessor.start();
-					resp.addDefaultHeaders(server);
-					resp.setHeader("Keep-Alive", "timeout=" + timeout + ", max=" + maxRequests);
+					else
+						requestNumber = 0;
 					resp.setConnectionState("Keep-Alive");
 					resp.build(output);
 				}

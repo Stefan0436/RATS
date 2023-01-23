@@ -81,7 +81,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 					return;
 				}
 			}
-			
+
 			for (IFileAlias provider : getContext().getAliases()) {
 				if (provider.match(getRequest(), path)) {
 					IFileAlias alias = provider.newInstance();
@@ -317,38 +317,36 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 				this.setBody("text/html", this.getError());
 			}
 
-			if (getResponse().headers.getOrDefault("Content-Type", "text/plain").equalsIgnoreCase("text/html")) {
-				for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
-					if (provider.match(path, getRequest())) {
+			for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
+				if ((provider.acceptNonHTML() || getResponse().headers.getOrDefault("Content-Type", "text/plain")
+						.equalsIgnoreCase("text/html")) && provider.match(path, getRequest())) {
 
-						IDocumentPostProcessor processor = provider.newInstance();
-						StringBuilder builder = new StringBuilder();
-						processor.setWriteCallback(t -> builder.append(t));
+					IDocumentPostProcessor processor = provider.newInstance();
+					StringBuilder builder = new StringBuilder();
+					processor.setWriteCallback(t -> builder.append(t));
 
-						if (processor instanceof IContextProviderExtension) {
-							((IContextProviderExtension) processor).provide(getContext());
-						}
-						if (processor instanceof IServerProviderExtension) {
-							((IServerProviderExtension) processor).provide(getServer());
-						}
-						if (processor instanceof IClientSocketProvider) {
-							((IClientSocketProvider) processor).provide(client);
-						}
-						if (processor instanceof IContextRootProviderExtension) {
-							((IContextRootProviderExtension) processor).provideVirtualRoot(getContextRoot());
-						}
+					if (processor instanceof IContextProviderExtension) {
+						((IContextProviderExtension) processor).provide(getContext());
+					}
+					if (processor instanceof IServerProviderExtension) {
+						((IServerProviderExtension) processor).provide(getServer());
+					}
+					if (processor instanceof IClientSocketProvider) {
+						((IClientSocketProvider) processor).provide(client);
+					}
+					if (processor instanceof IContextRootProviderExtension) {
+						((IContextRootProviderExtension) processor).provideVirtualRoot(getContextRoot());
+					}
 
-						processor.process(path, contentType, getRequest(), getResponse(), client, method);
+					processor.process(path, contentType, getRequest(), getResponse(), client, method);
 
-						byte[] bytes = builder.toString().getBytes();
-						ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
-						getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
-						if (getResponse().headers.containsKey("Content-Length")) {
-							getResponse().headers.put("Content-Length",
-									new BigInteger(getResponse().headers.get("Content-Length"))
-											.add(BigInteger.valueOf(bytes.length)).toString());
-						}
-						break;
+					byte[] bytes = builder.toString().getBytes();
+					ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+					getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
+					if (getResponse().headers.containsKey("Content-Length")) {
+						getResponse().headers.put("Content-Length",
+								new BigInteger(getResponse().headers.get("Content-Length"))
+										.add(BigInteger.valueOf(bytes.length)).toString());
 					}
 				}
 			}
@@ -465,40 +463,40 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 			this.setBody("text/html", this.getError());
 		}
 
-		if (getResponse().headers.getOrDefault("Content-Type", "text/plain").equalsIgnoreCase("text/html")) {
-			for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
-				if (provider.match(path, getRequest())) {
+		for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
+			if ((provider.acceptNonHTML()
+					|| getResponse().headers.getOrDefault("Content-Type", "text/plain").equalsIgnoreCase("text/html"))
+					&& provider.match(path, getRequest())) {
 
-					IDocumentPostProcessor processor = provider.newInstance();
-					StringBuilder builder = new StringBuilder();
-					processor.setWriteCallback(t -> builder.append(t));
+				IDocumentPostProcessor processor = provider.newInstance();
+				StringBuilder builder = new StringBuilder();
+				processor.setWriteCallback(t -> builder.append(t));
 
-					if (processor instanceof IContextProviderExtension) {
-						((IContextProviderExtension) processor).provide(getContext());
-					}
-					if (processor instanceof IServerProviderExtension) {
-						((IServerProviderExtension) processor).provide(getServer());
-					}
-					if (processor instanceof IClientSocketProvider) {
-						((IClientSocketProvider) processor).provide(client);
-					}
-					if (processor instanceof IContextRootProviderExtension) {
-						((IContextRootProviderExtension) processor).provideVirtualRoot(getContextRoot());
-					}
-
-					processor.process(path, getResponse().headers.get("Content-Type"), getRequest(), getResponse(),
-							client, getRequest().method);
-
-					byte[] bytes = builder.toString().getBytes();
-					ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
-					getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
-					if (getResponse().headers.containsKey("Content-Length")) {
-						getResponse().headers.put("Content-Length",
-								new BigInteger(getResponse().headers.get("Content-Length"))
-										.add(BigInteger.valueOf(bytes.length)).toString());
-					}
-					break;
+				if (processor instanceof IContextProviderExtension) {
+					((IContextProviderExtension) processor).provide(getContext());
 				}
+				if (processor instanceof IServerProviderExtension) {
+					((IServerProviderExtension) processor).provide(getServer());
+				}
+				if (processor instanceof IClientSocketProvider) {
+					((IClientSocketProvider) processor).provide(client);
+				}
+				if (processor instanceof IContextRootProviderExtension) {
+					((IContextRootProviderExtension) processor).provideVirtualRoot(getContextRoot());
+				}
+
+				processor.process(path, getResponse().headers.get("Content-Type"), getRequest(), getResponse(), client,
+						getRequest().method);
+
+				byte[] bytes = builder.toString().getBytes();
+				ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+				getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
+				if (getResponse().headers.containsKey("Content-Length")) {
+					getResponse().headers.put("Content-Length",
+							new BigInteger(getResponse().headers.get("Content-Length"))
+									.add(BigInteger.valueOf(bytes.length)).toString());
+				}
+				break;
 			}
 		}
 	}

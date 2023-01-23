@@ -3,11 +3,13 @@ package org.asf.rats;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Random;
 
 import org.asf.rats.processors.HttpUploadProcessor;
@@ -37,6 +39,7 @@ public class ConnectiveServerTest {
 
 		@Override
 		public void process(String contentType, Socket client, String method) {
+			getResponse().setHeader("Connection", "Keep-Alive");
 			if (contentType != null)
 				setBody(getRequestBody() + "-test");
 			else {
@@ -54,6 +57,96 @@ public class ConnectiveServerTest {
 			return true;
 		}
 
+	}
+
+	@Test
+	public void keepAliveConnectionTest() throws IOException {
+		ConnectiveHTTPServer testServer = new ConnectiveHTTPServer();
+		testServer.start();
+		testServer.registerProcessor(new TestProc());
+
+		URL u = new URL("http://localhost:" + testServer.getPort() + "/test?test=hi&test2=hello");
+		InputStream strm = u.openStream();
+		byte[] test = strm.readAllBytes();
+		strm.close();
+		String outp = new String(test);
+
+		assertTrue(outp.equals("12345"));
+
+		// Now test keep-alive
+		Socket sock = new Socket("localhost", testServer.getPort());
+
+		// Write first request
+		sock.getOutputStream().write("GET /test HTTP/1.1\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("Host: localhost\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("\r\n".getBytes("UTF-8"));
+
+		// Read response
+		HashMap<String, String> headers = new HashMap<String, String>();
+		String line = HttpRequest.readStreamLine(sock.getInputStream());
+		assertTrue(line.equals("HTTP/1.1 200 OK"));
+		while (true) {
+			line = HttpRequest.readStreamLine(sock.getInputStream());
+			if (line.equals(""))
+				break;
+			String key = line.substring(0, line.indexOf(": "));
+			String value = line.substring(line.indexOf(": ") + 2);
+			headers.put(key, value);
+		}
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		ConnectiveHTTPServer.transferRequestBody(headers, sock.getInputStream(), buffer);
+		String data = new String(buffer.toByteArray(), "UTF-8");
+		assertTrue(data.equals("12345"));
+
+		// Send second request
+		sock.getOutputStream().write("GET /test HTTP/1.1\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("Host: localhost\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("\r\n".getBytes("UTF-8"));
+
+		// Read response
+		headers.clear();
+		line = HttpRequest.readStreamLine(sock.getInputStream());
+		assertTrue(line.equals("HTTP/1.1 200 OK"));
+		while (true) {
+			line = HttpRequest.readStreamLine(sock.getInputStream());
+			if (line.equals(""))
+				break;
+			String key = line.substring(0, line.indexOf(": "));
+			String value = line.substring(line.indexOf(": ") + 2);
+			headers.put(key, value);
+		}
+		buffer = new ByteArrayOutputStream();
+		ConnectiveHTTPServer.transferRequestBody(headers, sock.getInputStream(), buffer);
+		data = new String(buffer.toByteArray(), "UTF-8");
+		assertTrue(data.equals("12345"));
+
+		// Send third request
+		sock.getOutputStream().write("POST /test HTTP/1.1\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("Host: localhost\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("Content-Type: text/plain\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("Content-Length: 4\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("\r\n".getBytes("UTF-8"));
+		sock.getOutputStream().write("Test".getBytes("UTF-8"));
+
+		// Read response
+		headers.clear();
+		line = HttpRequest.readStreamLine(sock.getInputStream());
+		assertTrue(line.equals("HTTP/1.1 200 OK"));
+		while (true) {
+			line = HttpRequest.readStreamLine(sock.getInputStream());
+			if (line.equals(""))
+				break;
+			String key = line.substring(0, line.indexOf(": "));
+			String value = line.substring(line.indexOf(": ") + 2);
+			headers.put(key, value);
+		}
+		buffer = new ByteArrayOutputStream();
+		ConnectiveHTTPServer.transferRequestBody(headers, sock.getInputStream(), buffer);
+		data = new String(buffer.toByteArray(), "UTF-8");
+		assertTrue(data.equals("Test-test"));
+		
+		sock.close();
+		testServer.stop();
 	}
 
 	@Test

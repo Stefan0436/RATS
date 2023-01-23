@@ -41,7 +41,7 @@ public class HttpRequest {
 		if (firstLine == null || firstLine.isEmpty())
 			return null;
 
-		if (!firstLine.substring(0, 1).matches("[A-Za-z0-9]") || firstLine.split(" ").length < 3) {
+		if (!firstLine.substring(0, 1).matches("[A-Za-z0-9]") || firstLine.split(" ").length != 3) {
 			return null;
 		}
 
@@ -70,7 +70,8 @@ public class HttpRequest {
 
 			String key = line.substring(0, line.indexOf(": "));
 			String value = line.substring(line.indexOf(": ") + 2);
-			msg.headers.put(key, value);
+			if (!msg.headers.containsKey(key)) // Prevent injection
+				msg.headers.put(key, value);
 		}
 
 		if (msg.method.equals("POST") || msg.method.equals("PUT")) {

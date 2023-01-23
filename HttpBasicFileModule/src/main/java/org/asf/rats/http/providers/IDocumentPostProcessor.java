@@ -66,6 +66,16 @@ public interface IDocumentPostProcessor {
 	}
 
 	/**
+	 * Defines if the processor should allow non-html pages, <b>note that when the
+	 * page is not a HTML, you cannot append to the document</b>
+	 * 
+	 * @return True if this processor works with non-html pages, false otherwise
+	 */
+	public default boolean acceptNonHTML() {
+		return false;
+	}
+
+	/**
 	 * Assigns the document append callback
 	 * 
 	 * @param callback Callback function

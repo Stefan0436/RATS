@@ -40,6 +40,10 @@ import org.asf.rats.processors.IAutoRegisterProcessor;
  */
 @CYAN_COMPONENT
 public class ConnectiveHTTPServer extends CyanComponent {
+	
+	// TODO:
+	// Chunked content
+	// Compressed content
 
 	public ConnectiveHTTPServer() {
 		try {
@@ -60,7 +64,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	protected String name = "ASF Connective";
-	protected String version = "1.0.0.A6";
+	protected String version = "1.0.0.A7";
 
 	protected boolean connected = false;
 	protected ServerSocket socket = null;

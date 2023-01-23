@@ -219,7 +219,7 @@ public class ConnectedClient extends CyanComponent {
 					if (maxRequests != 0)
 						requestNumber++;
 					else
-						requestNumber = 0;
+						requestNumber = 1;
 					if (timeout != 0) {
 						keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
 						keepAliveProcessor.start();
@@ -316,7 +316,7 @@ public class ConnectedClient extends CyanComponent {
 					if (maxRequests != 0)
 						requestNumber++;
 					else
-						requestNumber = 0;
+						requestNumber = 1;
 					resp.setConnectionState("Keep-Alive");
 					resp.build(output);
 				}

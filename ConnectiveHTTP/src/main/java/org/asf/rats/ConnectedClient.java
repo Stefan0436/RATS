@@ -124,6 +124,43 @@ public class ConnectedClient extends CyanComponent {
 			}
 		}
 
+		// Handle client keep-alive
+		boolean clientKeepAlive = false;
+		if (msg.headers.containsKey("Connection")
+				&& Stream.of(msg.headers.get("Connection").split(", ")).anyMatch(t -> t.equals("Keep-Alive"))) {
+			if (msg.headers.containsKey("Keep-Alive")) {
+				// Set values from existing header
+				String keepAliveInfo = msg.headers.get("Keep-Alive");
+				timeout = 0;
+				maxRequests = 0;
+				for (String entry : keepAliveInfo.split(", ")) {
+					// Parse
+					if (entry.contains("=")) {
+						String key = entry.substring(0, entry.indexOf("="));
+						String value = entry.substring(entry.indexOf("=") + 1);
+						switch (key) {
+
+						case "timeout": {
+							if (value.matches("^[0-9]+$"))
+								timeout = Integer.parseInt(value);
+							break;
+						}
+						case "max": {
+							if (value.matches("^[0-9]+$"))
+								maxRequests = Integer.parseInt(value);
+							break;
+						}
+
+						}
+					}
+				}
+			}
+
+			// Keep alive
+			clientKeepAlive = true;
+		}
+
+		// Handle request
 		boolean compatible = false;
 		ArrayList<HttpGetProcessor> getProcessorLst = new ArrayList<HttpGetProcessor>(server.getProcessors);
 		ArrayList<HttpUploadProcessor> uploadProcessorLst = new ArrayList<HttpUploadProcessor>(server.uploadProcessors);
@@ -180,6 +217,8 @@ public class ConnectedClient extends CyanComponent {
 				processor.process((msg.headers.get("Content-Type") == null ? msg.headers.get("Content-type")
 						: msg.headers.get("Content-Type")), client, msg.method);
 				HttpResponse resp = processor.getResponse();
+				if (clientKeepAlive)
+					resp.headers.put("Connection", "Keep-Alive");
 
 				if ((!resp.headers.containsKey("Connection")
 						|| !resp.headers.get("Connection").equalsIgnoreCase("Keep-Alive"))
@@ -273,6 +312,8 @@ public class ConnectedClient extends CyanComponent {
 				HttpGetProcessor processor = impl.instanciate(server, msg);
 				processor.process(client);
 				HttpResponse resp = processor.getResponse();
+				if (clientKeepAlive)
+					resp.headers.put("Connection", "Keep-Alive");
 
 				if ((!resp.headers.containsKey("Connection")
 						|| !resp.headers.get("Connection").equalsIgnoreCase("Keep-Alive"))

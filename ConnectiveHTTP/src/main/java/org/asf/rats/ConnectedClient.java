@@ -225,7 +225,6 @@ public class ConnectedClient extends CyanComponent {
 						|| (maxRequests != 0 && requestNumber >= maxRequests))
 					closeConnection(resp, client);
 				else {
-					receiving = false;
 					resp.addDefaultHeaders(server);
 					if (resp.headers.containsKey("Keep-Alive")) {
 						// Set values from existing header
@@ -265,6 +264,7 @@ public class ConnectedClient extends CyanComponent {
 					}
 					resp.setConnectionState("Keep-Alive");
 					resp.build(output);
+					receiving = false;
 				}
 			}
 		} else if (msg.method.equals("GET") || msg.method.equals("HEAD")) {
@@ -320,7 +320,6 @@ public class ConnectedClient extends CyanComponent {
 						|| (maxRequests != 0 && requestNumber >= maxRequests))
 					closeConnection(resp, client);
 				else {
-					receiving = false;
 					resp.addDefaultHeaders(server);
 					if (resp.headers.containsKey("Keep-Alive")) {
 						// Set values from existing header
@@ -360,6 +359,7 @@ public class ConnectedClient extends CyanComponent {
 						requestNumber = 1;
 					resp.setConnectionState("Keep-Alive");
 					resp.build(output);
+					receiving = false;
 				}
 			}
 		}

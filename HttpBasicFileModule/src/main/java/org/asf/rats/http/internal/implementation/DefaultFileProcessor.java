@@ -49,6 +49,42 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 			setResponseCode(403);
 			setResponseMessage("Access to parent directories denied");
 			setBody("text/html", getError());
+
+			for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
+				if ((provider.acceptNonHTML() || getResponse().headers.getOrDefault("Content-Type", "text/plain")
+						.equalsIgnoreCase("text/html")) && provider.match(path, getRequest())) {
+
+					IDocumentPostProcessor processor = provider.newInstance();
+					StringBuilder builder = new StringBuilder();
+					processor.setWriteCallback(t -> builder.append(t));
+
+					if (processor instanceof IContextProviderExtension) {
+						((IContextProviderExtension) processor).provide(getContext());
+					}
+					if (processor instanceof IServerProviderExtension) {
+						((IServerProviderExtension) processor).provide(getServer());
+					}
+					if (processor instanceof IClientSocketProvider) {
+						((IClientSocketProvider) processor).provide(client);
+					}
+					if (processor instanceof IContextRootProviderExtension) {
+						((IContextRootProviderExtension) processor).provideVirtualRoot(getContextRoot());
+					}
+
+					processor.process(path, getResponse().headers.get("Content-Type"), getRequest(), getResponse(),
+							client, getRequest().method);
+
+					byte[] bytes = builder.toString().getBytes();
+					ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+					getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
+					if (getResponse().headers.containsKey("Content-Length")) {
+						getResponse().headers.put("Content-Length",
+								new BigInteger(getResponse().headers.get("Content-Length"))
+										.add(BigInteger.valueOf(bytes.length)).toString());
+					}
+					break;
+				}
+			}
 		} else {
 			path = "/" + path;
 
@@ -188,6 +224,42 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 				setResponseCode(404);
 				setResponseMessage("File not found");
 				setBody("text/html", getError());
+
+				for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
+					if ((provider.acceptNonHTML() || getResponse().headers.getOrDefault("Content-Type", "text/plain")
+							.equalsIgnoreCase("text/html")) && provider.match(path, getRequest())) {
+
+						IDocumentPostProcessor processor = provider.newInstance();
+						StringBuilder builder = new StringBuilder();
+						processor.setWriteCallback(t -> builder.append(t));
+
+						if (processor instanceof IContextProviderExtension) {
+							((IContextProviderExtension) processor).provide(getContext());
+						}
+						if (processor instanceof IServerProviderExtension) {
+							((IServerProviderExtension) processor).provide(getServer());
+						}
+						if (processor instanceof IClientSocketProvider) {
+							((IClientSocketProvider) processor).provide(client);
+						}
+						if (processor instanceof IContextRootProviderExtension) {
+							((IContextRootProviderExtension) processor).provideVirtualRoot(getContextRoot());
+						}
+
+						processor.process(path, getResponse().headers.get("Content-Type"), getRequest(), getResponse(),
+								client, getRequest().method);
+
+						byte[] bytes = builder.toString().getBytes();
+						ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+						getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
+						if (getResponse().headers.containsKey("Content-Length")) {
+							getResponse().headers.put("Content-Length",
+									new BigInteger(getResponse().headers.get("Content-Length"))
+											.add(BigInteger.valueOf(bytes.length)).toString());
+						}
+						break;
+					}
+				}
 				return;
 			}
 
@@ -204,6 +276,43 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 					setResponseCode(404);
 					setResponseMessage("File not found");
 					setBody("text/html", getError());
+
+					for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
+						if ((provider.acceptNonHTML() || getResponse().headers
+								.getOrDefault("Content-Type", "text/plain").equalsIgnoreCase("text/html"))
+								&& provider.match(path, getRequest())) {
+
+							IDocumentPostProcessor processor = provider.newInstance();
+							StringBuilder builder = new StringBuilder();
+							processor.setWriteCallback(t -> builder.append(t));
+
+							if (processor instanceof IContextProviderExtension) {
+								((IContextProviderExtension) processor).provide(getContext());
+							}
+							if (processor instanceof IServerProviderExtension) {
+								((IServerProviderExtension) processor).provide(getServer());
+							}
+							if (processor instanceof IClientSocketProvider) {
+								((IClientSocketProvider) processor).provide(client);
+							}
+							if (processor instanceof IContextRootProviderExtension) {
+								((IContextRootProviderExtension) processor).provideVirtualRoot(getContextRoot());
+							}
+
+							processor.process(path, getResponse().headers.get("Content-Type"), getRequest(),
+									getResponse(), client, getRequest().method);
+
+							byte[] bytes = builder.toString().getBytes();
+							ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+							getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
+							if (getResponse().headers.containsKey("Content-Length")) {
+								getResponse().headers.put("Content-Length",
+										new BigInteger(getResponse().headers.get("Content-Length"))
+												.add(BigInteger.valueOf(bytes.length)).toString());
+							}
+							break;
+						}
+					}
 					return;
 				}
 			}
@@ -257,6 +366,44 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 							setResponseCode(405);
 							setResponseMessage(method.toUpperCase() + " not supported");
 							setBody("text/html", getError());
+
+							for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
+								if ((provider.acceptNonHTML() || getResponse().headers
+										.getOrDefault("Content-Type", "text/plain").equalsIgnoreCase("text/html"))
+										&& provider.match(path, getRequest())) {
+
+									IDocumentPostProcessor processor = provider.newInstance();
+									StringBuilder builder = new StringBuilder();
+									processor.setWriteCallback(t -> builder.append(t));
+
+									if (processor instanceof IContextProviderExtension) {
+										((IContextProviderExtension) processor).provide(getContext());
+									}
+									if (processor instanceof IServerProviderExtension) {
+										((IServerProviderExtension) processor).provide(getServer());
+									}
+									if (processor instanceof IClientSocketProvider) {
+										((IClientSocketProvider) processor).provide(client);
+									}
+									if (processor instanceof IContextRootProviderExtension) {
+										((IContextRootProviderExtension) processor)
+												.provideVirtualRoot(getContextRoot());
+									}
+
+									processor.process(path, getResponse().headers.get("Content-Type"), getRequest(),
+											getResponse(), client, getRequest().method);
+
+									byte[] bytes = builder.toString().getBytes();
+									ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+									getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
+									if (getResponse().headers.containsKey("Content-Length")) {
+										getResponse().headers.put("Content-Length",
+												new BigInteger(getResponse().headers.get("Content-Length"))
+														.add(BigInteger.valueOf(bytes.length)).toString());
+									}
+									break;
+								}
+							}
 							return;
 						}
 					}
@@ -270,6 +417,42 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 				setResponseCode(405);
 				setResponseMessage(method.toUpperCase() + " not supported");
 				setBody("text/html", getError());
+
+				for (IDocumentPostProcessor provider : getContext().getDocumentPostProcessors()) {
+					if ((provider.acceptNonHTML() || getResponse().headers.getOrDefault("Content-Type", "text/plain")
+							.equalsIgnoreCase("text/html")) && provider.match(path, getRequest())) {
+
+						IDocumentPostProcessor processor = provider.newInstance();
+						StringBuilder builder = new StringBuilder();
+						processor.setWriteCallback(t -> builder.append(t));
+
+						if (processor instanceof IContextProviderExtension) {
+							((IContextProviderExtension) processor).provide(getContext());
+						}
+						if (processor instanceof IServerProviderExtension) {
+							((IServerProviderExtension) processor).provide(getServer());
+						}
+						if (processor instanceof IClientSocketProvider) {
+							((IClientSocketProvider) processor).provide(client);
+						}
+						if (processor instanceof IContextRootProviderExtension) {
+							((IContextRootProviderExtension) processor).provideVirtualRoot(getContextRoot());
+						}
+
+						processor.process(path, getResponse().headers.get("Content-Type"), getRequest(), getResponse(),
+								client, getRequest().method);
+
+						byte[] bytes = builder.toString().getBytes();
+						ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+						getResponse().body = new AmendingInputStream(byteStream, getResponse().body);
+						if (getResponse().headers.containsKey("Content-Length")) {
+							getResponse().headers.put("Content-Length",
+									new BigInteger(getResponse().headers.get("Content-Length"))
+											.add(BigInteger.valueOf(bytes.length)).toString());
+						}
+						break;
+					}
+				}
 				return;
 			}
 

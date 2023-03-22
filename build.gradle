@@ -41,6 +41,22 @@ task installation () {
 						}
 					}
 				}
+				for (ResolvedArtifact arti : proj.value.configurations.implementation.resolvedConfiguration.getResolvedArtifacts()) {
+					copy {							
+						from arti.file
+						rename arti.file.getName(), arti.name + (arti.getClassifier() != null && !arti.getClassifier().isEmpty() ? "-" + arti.getClassifier() : "") + "." + arti.getExtension()
+						into "build/Binaries/" + proj.value.name
+					}
+				}
+				for (def task : proj.value.tasks) {
+					if (task instanceof AbstractArchiveTask) {
+						copy {
+							from task.getArchiveFile().get()
+							rename task.getArchiveFile().get().getAsFile().getName(), task.getArchiveBaseName().get() + (task.getArchiveClassifier().get() != null && !task.getArchiveClassifier().get().isEmpty() ? "-" + task.getArchiveClassifier().get() : "") + "." + task.getArchiveExtension().get()
+							into "build/Binaries/" + proj.value.name
+						}
+					}
+				}
 			}
 		}
 	}

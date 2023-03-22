@@ -228,7 +228,8 @@ public class ConnectedClient {
 					logger.info(msg.version + " " + msg.method + " " + msg.path
 							+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query) + ": " + resp.status
 							+ " " + resp.message + " [" + client.getRemoteSocketAddress() + "]");
-				resp.headers.put("Connection", "Keep-Alive");
+				if (clientKeepAlive)
+					resp.headers.put("Connection", "Keep-Alive");
 
 				if ((!resp.headers.containsKey("Connection")
 						|| !resp.headers.get("Connection").equalsIgnoreCase("Keep-Alive"))

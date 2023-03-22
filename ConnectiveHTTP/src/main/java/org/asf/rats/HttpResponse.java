@@ -292,14 +292,15 @@ public class HttpResponse {
 		resp.append("\r\n");
 		resp.append("\r\n");
 		if (body != null && !input.method.equals("HEAD") && status != 204) {
-			output.write(resp.toString().getBytes());
+			output.write(resp.toString().getBytes("UTF-8"));
 
 			body.transferTo(output);
 			body.close();
 			body = null;
 		} else {
-			output.write(resp.toString().getBytes());
+			output.write(resp.toString().getBytes("UTF-8"));
 		}
+		output.write("\r\n".getBytes("UTF-8"));
 	}
 
 	// Adapted from SO answer: https://stackoverflow.com/a/8642463

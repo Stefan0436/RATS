@@ -48,6 +48,7 @@ public class HttpRequest {
 		HttpRequest msg = new HttpRequest();
 
 		msg.path = firstLine.substring(firstLine.indexOf(" ") + 1, firstLine.lastIndexOf(" "));
+		URLDecoder.decode(msg.path, "UTF-8");
 		if (msg.path.contains("?")) {
 			msg.query = msg.path.substring(msg.path.lastIndexOf("?") + 1);
 			msg.path = msg.path.substring(0, msg.path.lastIndexOf("?"));

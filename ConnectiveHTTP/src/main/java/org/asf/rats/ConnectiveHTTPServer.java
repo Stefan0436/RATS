@@ -3,7 +3,6 @@ package org.asf.rats;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,35 +11,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.BiFunction;
 
-import org.asf.cyan.api.common.CYAN_COMPONENT;
-import org.asf.cyan.api.common.CyanComponent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.asf.rats.processors.HttpGetProcessor;
 import org.asf.rats.processors.HttpUploadProcessor;
-import org.asf.rats.processors.IAutoRegisterProcessor;
 
 /**
  * 
  * ConnectiveHTTP Server, HTTP Server API. <b>Avoid direct construction, use the
- * factory instead: {@link ConnectiveServerFactory
- * ConnectiveServerFactory}</b><br />
- * <br />
- * <b>NOTE:</b> This class provides a CYAN component and will automatically
- * start the server if such implementation calls it!<br />
- * <br />
- * The autostart options can be configured using {@link Memory RaTs!
- * Memory}.<br />
- * Memory keys:<br />
- * - <b>connective.http.props.autostart</b> - true to autostart, false
- * otherwise.<br />
- * - <b>connective.http.props.port</b> - server port -
- * <b>connective.http.props.ip</b> - server ip
+ * factory instead: {@link ConnectiveServerFactory ConnectiveServerFactory}</b>
  * 
  * @author Stefan0436 - AerialWorks Software Foundation
  *
  */
-@CYAN_COMPONENT
-public class ConnectiveHTTPServer extends CyanComponent {
-	
+public class ConnectiveHTTPServer {
+
 	// TODO:
 	// Chunked content
 	// Compressed content
@@ -64,7 +49,7 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	}
 
 	protected String name = "ASF Connective";
-	protected String version = "1.0.0.A9";
+	protected String version = "1.0.0.A10";
 
 	protected boolean connected = false;
 	protected ServerSocket socket = null;
@@ -76,6 +61,22 @@ public class ConnectiveHTTPServer extends CyanComponent {
 
 	protected int port = 8080;
 	protected InetAddress ip = null;
+
+	private Logger logger = LogManager.getLogger("connective-http");
+
+	/**
+	 * Implementation of the main server, assign to set a server implementation
+	 */
+	protected static ConnectiveHTTPServer implementation;
+
+	/**
+	 * Retrieves the instance of the auto-started server.
+	 * 
+	 * @return ConnectiveHTTPServer instance.
+	 */
+	public static ConnectiveHTTPServer getMainServer() {
+		return implementation;
+	}
 
 	protected Thread serverProcessor = new Thread(() -> {
 		while (connected) {
@@ -93,59 +94,10 @@ public class ConnectiveHTTPServer extends CyanComponent {
 				if (!connected)
 					break;
 
-				error("Failed to process client", ex);
+				logger.error("Failed to process client", ex);
 			}
 		}
 	}, "Connective server thread");
-
-	protected static ConnectiveHTTPServer implementation;
-
-	protected static void initComponent() throws IOException {
-		if (implementation == null)
-			implementation = new ConnectiveHTTPServer();
-
-		ConnectiveHTTPServer server = implementation;
-
-		for (Class<IAutoRegisterProcessor> register : findClasses(getMainImplementation(),
-				IAutoRegisterProcessor.class)) {
-
-			if (HttpUploadProcessor.class.isAssignableFrom(register)) {
-				try {
-					server.registerProcessor((HttpUploadProcessor) register.getConstructor().newInstance());
-				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-					error("Automatic HTTP processor registration failed, HTTP POST/PUT/DELETE Processor Type: "
-							+ register.getTypeName(), e);
-				}
-			} else if (HttpGetProcessor.class.isAssignableFrom(register)) {
-				try {
-					server.registerProcessor((HttpGetProcessor) register.getConstructor().newInstance());
-				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-					error("Automatic HTTP processor registration failed, HTTP POST/PUT/DELETE Processor Type: "
-							+ register.getTypeName(), e);
-				}
-			}
-
-		}
-
-		Boolean autostart = Memory.getInstance().getOrCreate("connective.http.props.autostart").getValue(Boolean.class);
-		if (autostart == null)
-			autostart = true;
-
-		Integer portSetting = Memory.getInstance().getOrCreate("connective.http.props.port").getValue(Integer.class);
-		if (portSetting == null)
-			portSetting = server.port;
-
-		InetAddress addr = Memory.getInstance().getOrCreate("connective.http.props.ip").getValue(InetAddress.class);
-		if (addr != null)
-			server.ip = addr;
-
-		server.port = portSetting;
-
-		if (autostart)
-			server.start();
-	}
 
 	/**
 	 * Retrieves the client output stream (override only)
@@ -316,15 +268,6 @@ public class ConnectiveHTTPServer extends CyanComponent {
 	 */
 	public InetAddress getIp() {
 		return ip;
-	}
-
-	/**
-	 * Retrieves the instance of the auto-started server.
-	 * 
-	 * @return ConnectiveHTTPServer instance.
-	 */
-	public static ConnectiveHTTPServer getMainServer() {
-		return implementation;
 	}
 
 	/**

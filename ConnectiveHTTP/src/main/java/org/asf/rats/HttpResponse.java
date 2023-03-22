@@ -119,7 +119,7 @@ public class HttpResponse {
 	}
 
 	public HttpResponse addDefaultHeaders(ConnectiveHTTPServer server) {
-		headers.put("Server", server.getName() + " " + server.getVersion());
+		headers.put("Server", server.getName());
 		headers.put("Date", getHttpDate(new Date()));
 		if ((input.headers.containsKey("Connection") && !headers.containsKey("Connection"))
 				|| !headers.containsKey("Content-Length")) {

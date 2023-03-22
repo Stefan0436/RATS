@@ -2,10 +2,11 @@ package org.asf.rats.configuration;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.function.Consumer;
 
+import org.asf.cyan.api.config.Configuration;
 import org.asf.cyan.api.config.annotations.Comment;
-import org.asf.rats.ModuleBasedConfiguration;
 
 /**
  * 
@@ -20,7 +21,7 @@ import org.asf.rats.ModuleBasedConfiguration;
 @Comment("")
 @Comment("RaTs Main Configuration File.")
 @Comment("You can configure settings such as the server port here.")
-public class RatsConfiguration extends ModuleBasedConfiguration<RatsConfiguration> {
+public class RatsConfiguration extends Configuration<RatsConfiguration> {
 
 	private static RatsConfiguration instance;
 	private static ArrayList<Consumer<RatsConfiguration>> loadHooks = new ArrayList<Consumer<RatsConfiguration>>();
@@ -74,4 +75,12 @@ public class RatsConfiguration extends ModuleBasedConfiguration<RatsConfiguratio
 
 	@Comment("HTTP Server Port")
 	public int httpPort = 8080;
+
+	@Comment("Module configuration, modules should use this map for configuration.")
+	@Comment("Format goes as following:")
+	@Comment("")
+	@Comment("module> {")
+	@Comment("    (config map)")
+	@Comment("}")
+	public HashMap<String, HashMap<String, String>> modules = new HashMap<String, HashMap<String, String>>();
 }

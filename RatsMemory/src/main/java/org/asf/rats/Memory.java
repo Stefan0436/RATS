@@ -3,9 +3,6 @@ package org.asf.rats;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-import org.asf.cyan.api.common.CYAN_COMPONENT;
-import org.asf.cyan.api.config.serializing.internal.Splitter;
-
 /**
  * 
  * RaTs! Memory System, stores objects and information.
@@ -13,7 +10,6 @@ import org.asf.cyan.api.config.serializing.internal.Splitter;
  * @author Stefan0436 - AerialWorks Software Foundation
  *
  */
-@CYAN_COMPONENT
 public class Memory {
 
 	/**
@@ -54,7 +50,7 @@ public class Memory {
 	protected ArrayList<Memory> subMemory = new ArrayList<Memory>();
 	protected ArrayList<MemoryValue<?>> values = new ArrayList<MemoryValue<?>>();
 
-	protected char separator = '.';
+	protected String separator = "\\.";
 
 	/**
 	 * Internal constructor
@@ -110,7 +106,7 @@ public class Memory {
 	 * @return Memory instance or null if not found.
 	 */
 	public Memory get(String path) {
-		String[] pathEntries = Splitter.split(path, separator);
+		String[] pathEntries = path.split(separator);
 		if (pathEntries.length == 0)
 			return null;
 
@@ -146,7 +142,7 @@ public class Memory {
 		if (get(path) != null)
 			return get(path);
 
-		String[] pathEntries = Splitter.split(path, separator);
+		String[] pathEntries = path.split(separator);
 		if (pathEntries.length == 0)
 			return null;
 

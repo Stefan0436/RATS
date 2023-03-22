@@ -10,7 +10,8 @@ import java.util.stream.Stream;
 
 import javax.net.ssl.SSLException;
 
-import org.asf.cyan.api.common.CyanComponent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.asf.rats.processors.HttpGetProcessor;
 import org.asf.rats.processors.HttpUploadProcessor;
 
@@ -21,7 +22,7 @@ import org.asf.rats.processors.HttpUploadProcessor;
  * @author Stefan0436 - AerialWorks Software Foundation
  *
  */
-public class ConnectedClient extends CyanComponent {
+public class ConnectedClient {
 	protected static String[] uploadMethods = new String[] { "POST", "PUT", "DELETE", "PATCH" };
 
 	protected static int timeout = 0;
@@ -38,6 +39,8 @@ public class ConnectedClient extends CyanComponent {
 
 	protected int requestNumber = 0;
 	protected boolean keepAliveTHEnd = true;
+
+	private Logger logger = LogManager.getLogger("connective-http");
 
 	public ConnectedClient(Socket client, InputStream input, OutputStream output, ConnectiveHTTPServer server) {
 		this.server = server;
@@ -123,6 +126,8 @@ public class ConnectedClient extends CyanComponent {
 				}
 			}
 		}
+		logger.info(client.getRemoteSocketAddress() + ": " + msg.method + ": " + msg.path
+				+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
 
 		// Handle client keep-alive
 		boolean clientKeepAlive = false;
@@ -217,6 +222,12 @@ public class ConnectedClient extends CyanComponent {
 				processor.process((msg.headers.get("Content-Type") == null ? msg.headers.get("Content-type")
 						: msg.headers.get("Content-Type")), client, msg.method);
 				HttpResponse resp = processor.getResponse();
+				if (resp.status >= 400)
+					logger.error(client.getRemoteSocketAddress() + ": " + resp.status + " " + resp.message + "  -  "
+							+ msg.path + (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
+				else
+					logger.info(client.getRemoteSocketAddress() + ": " + resp.status + " " + resp.message + "  -  "
+							+ msg.path + (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
 				if (clientKeepAlive)
 					resp.headers.put("Connection", "Keep-Alive");
 
@@ -312,6 +323,12 @@ public class ConnectedClient extends CyanComponent {
 				HttpGetProcessor processor = impl.instanciate(server, msg);
 				processor.process(client);
 				HttpResponse resp = processor.getResponse();
+				if (resp.status >= 400)
+					logger.error(client.getRemoteSocketAddress() + ": " + resp.status + " " + resp.message + "  -  "
+							+ msg.path + (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
+				else
+					logger.info(client.getRemoteSocketAddress() + ": " + resp.status + " " + resp.message + "  -  "
+							+ msg.path + (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
 				if (clientKeepAlive)
 					resp.headers.put("Connection", "Keep-Alive");
 
@@ -366,8 +383,12 @@ public class ConnectedClient extends CyanComponent {
 
 		if (!compatible) {
 			if (!msg.method.equals("GET") && !msg.method.equals("HEAD")) {
+				logger.error(client.getRemoteSocketAddress() + ": 405 Unsupported request  -  " + msg.path
+						+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
 				closeConnection(msg, 405, "Unsupported request");
 			} else {
+				logger.error(client.getRemoteSocketAddress() + ": 404 Command not FOund  -  " + msg.path
+						+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
 				closeConnection(msg, 404, "Command not found");
 			}
 		}
@@ -413,7 +434,14 @@ public class ConnectedClient extends CyanComponent {
 			receiving = false;
 			HttpRequest msg = null;
 			try {
-				msg = HttpRequest.parse(input);
+				try {
+					msg = HttpRequest.parse(input);
+				} catch (Exception e) {
+					HttpRequest dummy = new HttpRequest();
+					dummy.version = server.getPreferredProtocol();
+					closeConnection(dummy, 400, "Bad request");
+					return;
+				}
 				receiving = true;
 				if (msg == null) {
 					HttpRequest dummy = new HttpRequest();
@@ -422,8 +450,7 @@ public class ConnectedClient extends CyanComponent {
 					closeConnection(dummy, 503, "Unsupported request");
 					dummy.close();
 				} else {
-
-					// change to different version system once http reaches 1.x.x (if it ever does)
+					// TODO: handle HTTP 2
 					if (Double.valueOf(msg.version.substring("HTTP/".length())) < server.httpVersion) {
 						HttpRequest dummy = new HttpRequest();
 						dummy.version = msg.version;
@@ -439,7 +466,7 @@ public class ConnectedClient extends CyanComponent {
 				if (!server.connected || ex instanceof SSLException || ex instanceof SocketException)
 					return;
 
-				error("Failed to process request", ex);
+				logger.error("Failed to process request", ex);
 				try {
 					if (msg == null) {
 						msg = new HttpRequest();

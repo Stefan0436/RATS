@@ -144,7 +144,7 @@ public class ConnectiveServerTest {
 		ConnectiveHTTPServer.transferRequestBody(headers, sock.getInputStream(), buffer);
 		data = new String(buffer.toByteArray(), "UTF-8");
 		assertTrue(data.equals("Test-test"));
-		
+
 		sock.close();
 		testServer.stop();
 	}
@@ -163,6 +163,21 @@ public class ConnectiveServerTest {
 
 		assertTrue(outp.equals("12345"));
 		testServer.stop();
+	}
+
+	@Test
+	public void malformedTest() throws IOException {
+		ConnectiveHTTPServer testServer = new ConnectiveHTTPServer();
+		testServer.start();
+		testServer.registerProcessor(new TestProc());
+
+		URL u = new URL("http://localhost:" + testServer.getPort() + "/%YE");
+		HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+		assertTrue(conn.getResponseCode() == 400);
+
+		u = new URL("http://localhost:" + testServer.getPort() + "/test?malformed=%YE");
+		conn = (HttpURLConnection) u.openConnection();
+		assertTrue(conn.getResponseCode() == 400);
 	}
 
 	@Test

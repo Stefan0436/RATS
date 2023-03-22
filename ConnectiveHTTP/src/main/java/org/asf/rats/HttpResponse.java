@@ -26,6 +26,12 @@ public class HttpResponse {
 
 	public int status = 200;
 	public String message = "OK";
+
+	/**
+	 * @deprecated Deprecated, use setContent(type, body, length) or
+	 *             setContent(body, length) instead
+	 */
+	@Deprecated
 	public InputStream body = null;
 
 	public HttpResponse(int status, String message, HttpRequest input) {
@@ -39,6 +45,15 @@ public class HttpResponse {
 
 	public HttpResponse(HttpRequest input) {
 		this.input = input;
+	}
+
+	/**
+	 * Retrieves the response body stream
+	 * 
+	 * @return Response body stream or null
+	 */
+	public InputStream getBodyStream() {
+		return body;
 	}
 
 	/**
@@ -103,9 +118,56 @@ public class HttpResponse {
 	 * 
 	 * @param type Content type.
 	 * @param body Input stream.
+	 * @deprecated Deprecated, use setContent(type, body, length) or
+	 *             setContent(body, length) instead
 	 */
+	@Deprecated
 	public HttpResponse setContent(String type, InputStream body) {
 		headers.put("Content-Type", type);
+
+		if (this.body != null) {
+			try {
+				this.body.close();
+			} catch (IOException e) {
+			}
+		}
+
+		this.body = body;
+		return this;
+	}
+
+	/**
+	 * Sets the body of the response, WARNING: the stream gets closed on build.
+	 * 
+	 * @param type   Content type.
+	 * @param body   Input stream.
+	 * @param length Content length.
+	 */
+	public HttpResponse setContent(String type, InputStream body, long length) {
+		headers.put("Content-Type", type);
+		headers.put("Content-Length", Long.toString(length));
+
+		if (this.body != null) {
+			try {
+				this.body.close();
+			} catch (IOException e) {
+			}
+		}
+
+		this.body = body;
+		return this;
+	}
+
+	/**
+	 * Sets the body of the response, WARNING: the stream gets closed on build.
+	 * 
+	 * @param body   Input stream.
+	 * @param length Content length.
+	 */
+	public HttpResponse setContent(InputStream body, long length) {
+		if (!headers.containsKey("Content-Type"))
+			headers.put("Content-Type", "application/octet-stream");
+		headers.put("Content-Length", Long.toString(length));
 
 		if (this.body != null) {
 			try {
@@ -300,7 +362,6 @@ public class HttpResponse {
 		} else {
 			output.write(resp.toString().getBytes("UTF-8"));
 		}
-		output.write("\r\n".getBytes("UTF-8"));
 	}
 
 	// Adapted from SO answer: https://stackoverflow.com/a/8642463

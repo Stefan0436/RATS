@@ -15,6 +15,7 @@ import org.asf.rats.HttpResponse;
 public class FileContext {
 	private HttpResponse response;
 	private InputStream file;
+	private long length = -1;
 
 	protected FileContext() {
 	}
@@ -27,6 +28,27 @@ public class FileContext {
 	 * @param body      Content stream.
 	 * @return New FileContext instance.
 	 */
+	public static FileContext create(HttpResponse input, String mediaType, InputStream body, long length) {
+		FileContext context = new FileContext();
+
+		context.file = body;
+		context.length = length;
+		context.response = input;
+		context.response.headers.put("Content-Type", mediaType);
+
+		return context;
+	}
+
+	/**
+	 * Creates a new file context instance.
+	 * 
+	 * @param input     Input response.
+	 * @param mediaType New media type.
+	 * @param body      Content stream.
+	 * @return New FileContext instance.
+	 * @deprecated Use create(input, mediaType, body, length) instead
+	 */
+	@Deprecated
 	public static FileContext create(HttpResponse input, String mediaType, InputStream body) {
 		FileContext context = new FileContext();
 
@@ -52,15 +74,18 @@ public class FileContext {
 	 * 
 	 * @return Rewritten HttpResponse instance.
 	 */
+	@SuppressWarnings("deprecation")
 	public HttpResponse getRewrittenResponse() {
-		if (response.body != null) {
+		if (response.getBodyStream() != null) {
 			try {
-				response.body.close();
+				response.getBodyStream().close();
 			} catch (IOException e) {
 			}
 		}
 
 		response.body = file;
+		if (length != -1)
+			response.setHeader("Content-Length", Long.toString(length));
 		return response;
 	}
 }

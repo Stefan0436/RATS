@@ -26,7 +26,7 @@ public abstract class HttpGetProcessor {
 		HttpGetProcessor inst = createNewInstance();
 		inst.server = server;
 		inst.request = request;
-		if (request.headers.containsKey("Connection"))  {
+		if (request.headers.containsKey("Connection")) {
 			inst.getResponse().headers.put("Connection", request.headers.get("Connection"));
 		}
 		return inst;
@@ -118,11 +118,35 @@ public abstract class HttpGetProcessor {
 	/**
 	 * Sets the response body (InputStream)
 	 * 
-	 * @param body Response body string
+	 * @param body Response body stream
 	 * @throws IOException If reading the available bytes fails.
+	 * @deprecated Deprecated, use setContent(type, body, length) or
+	 *             setContent(body, length) instead
 	 */
-	protected void setBody(InputStream body) throws IOException {
-		getResponse().setContent("application/octet-stream", body);
+	@Deprecated
+	protected HttpResponse setBody(InputStream body) throws IOException {
+		return getResponse().setContent("application/octet-stream", body);
+	}
+
+	/**
+	 * Sets the response body (InputStream)
+	 * 
+	 * @param type   Content type.
+	 * @param body   Input stream.
+	 * @param length Content length.
+	 */
+	public HttpResponse setContent(String type, InputStream body, long length) {
+		return getResponse().setContent(type, body, length);
+	}
+
+	/**
+	 * Sets the response body (InputStream)
+	 * 
+	 * @param body   Input stream.
+	 * @param length Content length.
+	 */
+	public HttpResponse setContent(InputStream body, long length) {
+		return getResponse().setContent(body, length);
 	}
 
 	/**

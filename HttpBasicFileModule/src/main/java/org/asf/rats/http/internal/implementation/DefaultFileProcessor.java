@@ -43,6 +43,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 		assignImplementation(new DefaultFileProcessor());
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void process(String path, String contentType, Socket client, String method) {
 		if (path.contains("..")) {
@@ -612,6 +613,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 		return getServer().genError(getResponse(), getRequest());
 	}
 
+	@SuppressWarnings("deprecation")
 	protected void execPage(IndexPageProvider page, File sourceFile, String path, Socket client) {
 		File[] files = Stream.of(sourceFile.listFiles(new FileFilter() {
 
@@ -642,7 +644,7 @@ public class DefaultFileProcessor extends ProcessorAbstract {
 			((IContextRootProviderExtension) inst).provideVirtualRoot(getContextRoot());
 		}
 		inst.process(client, dirs, files);
-		if (this.getResponse().body == null) {
+		if (this.getResponse().getBodyStream() == null) {
 			this.setBody("text/html", this.getError());
 		}
 

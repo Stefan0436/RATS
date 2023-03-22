@@ -130,7 +130,7 @@ public class ConnectedClient {
 		// Handle client keep-alive
 		boolean clientKeepAlive = false;
 		if (msg.headers.containsKey("Connection")
-				&& Stream.of(msg.headers.get("Connection").split(", ")).anyMatch(t -> t.equals("Keep-Alive"))) {
+				&& Stream.of(msg.headers.get("Connection").split(", ")).anyMatch(t -> t.equalsIgnoreCase("Keep-Alive"))) {
 			if (msg.headers.containsKey("Keep-Alive")) {
 				// Set values from existing header
 				String keepAliveInfo = msg.headers.get("Keep-Alive");

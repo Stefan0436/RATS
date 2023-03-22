@@ -126,8 +126,6 @@ public class ConnectedClient {
 				}
 			}
 		}
-		logger.info(client.getRemoteSocketAddress() + ": " + msg.method + ": " + msg.path
-				+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
 
 		// Handle client keep-alive
 		boolean clientKeepAlive = false;
@@ -223,13 +221,14 @@ public class ConnectedClient {
 						: msg.headers.get("Content-Type")), client, msg.method);
 				HttpResponse resp = processor.getResponse();
 				if (resp.status >= 400)
-					logger.error(client.getRemoteSocketAddress() + ": " + resp.status + " " + resp.message + "  -  "
-							+ msg.path + (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
+					logger.error(msg.version + " " + msg.method + " " + msg.path
+							+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query) + ": " + resp.status
+							+ " " + resp.message + " [" + client.getRemoteSocketAddress() + "]");
 				else
-					logger.info(client.getRemoteSocketAddress() + ": " + resp.status + " " + resp.message + "  -  "
-							+ msg.path + (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
-				if (clientKeepAlive)
-					resp.headers.put("Connection", "Keep-Alive");
+					logger.info(msg.version + " " + msg.method + " " + msg.path
+							+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query) + ": " + resp.status
+							+ " " + resp.message + " [" + client.getRemoteSocketAddress() + "]");
+				resp.headers.put("Connection", "Keep-Alive");
 
 				if ((!resp.headers.containsKey("Connection")
 						|| !resp.headers.get("Connection").equalsIgnoreCase("Keep-Alive"))
@@ -324,11 +323,13 @@ public class ConnectedClient {
 				processor.process(client);
 				HttpResponse resp = processor.getResponse();
 				if (resp.status >= 400)
-					logger.error(client.getRemoteSocketAddress() + ": " + resp.status + " " + resp.message + "  -  "
-							+ msg.path + (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
+					logger.error(msg.version + " " + msg.method + " " + msg.path
+							+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query) + ": " + resp.status
+							+ " " + resp.message + " [" + client.getRemoteSocketAddress() + "]");
 				else
-					logger.info(client.getRemoteSocketAddress() + ": " + resp.status + " " + resp.message + "  -  "
-							+ msg.path + (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
+					logger.info(msg.version + " " + msg.method + " " + msg.path
+							+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query) + ": " + resp.status
+							+ " " + resp.message + " [" + client.getRemoteSocketAddress() + "]");
 				if (clientKeepAlive)
 					resp.headers.put("Connection", "Keep-Alive");
 
@@ -383,12 +384,14 @@ public class ConnectedClient {
 
 		if (!compatible) {
 			if (!msg.method.equals("GET") && !msg.method.equals("HEAD")) {
-				logger.error(client.getRemoteSocketAddress() + ": 405 Unsupported request  -  " + msg.path
-						+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
+				logger.error(msg.version + " " + msg.method + " " + msg.path
+						+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query)
+						+ ": 405 Unsupported request " + " [" + client.getRemoteSocketAddress() + "]");
 				closeConnection(msg, 405, "Unsupported request");
 			} else {
-				logger.error(client.getRemoteSocketAddress() + ": 404 Command not FOund  -  " + msg.path
-						+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query));
+				logger.error(msg.version + " " + msg.method + " " + msg.path
+						+ (msg.query == null || msg.query.isEmpty() ? "" : "?" + msg.query) + ": 404 Command not found "
+						+ " [" + client.getRemoteSocketAddress() + "]");
 				closeConnection(msg, 404, "Command not found");
 			}
 		}

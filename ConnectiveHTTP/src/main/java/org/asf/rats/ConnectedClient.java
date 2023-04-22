@@ -117,13 +117,11 @@ public class ConnectedClient {
 	 */
 	protected void processRequest(HttpRequest msg) throws IOException {
 		receiving = true;
-		if (timeout != 0) {
-			while (!keepAliveTHEnd) {
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					break;
-				}
+		while (!keepAliveTHEnd) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				break;
 			}
 		}
 
@@ -134,7 +132,7 @@ public class ConnectedClient {
 			if (msg.headers.containsKey("Keep-Alive")) {
 				// Set values from existing header
 				String keepAliveInfo = msg.headers.get("Keep-Alive");
-				timeout = 0;
+				timeout = 5;
 				maxRequests = 0;
 				for (String entry : keepAliveInfo.split(", ")) {
 					// Parse
@@ -240,7 +238,7 @@ public class ConnectedClient {
 					if (resp.headers.containsKey("Keep-Alive")) {
 						// Set values from existing header
 						String keepAliveInfo = resp.headers.get("Keep-Alive");
-						timeout = 0;
+						timeout = 5;
 						maxRequests = 0;
 						for (String entry : keepAliveInfo.split(", ")) {
 							// Parse
@@ -269,10 +267,8 @@ public class ConnectedClient {
 						requestNumber++;
 					else
 						requestNumber = 1;
-					if (timeout != 0) {
-						keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
-						keepAliveProcessor.start();
-					}
+					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
+					keepAliveProcessor.start();
 					resp.setConnectionState("Keep-Alive");
 					resp.build(output);
 					receiving = false;
@@ -343,7 +339,7 @@ public class ConnectedClient {
 					if (resp.headers.containsKey("Keep-Alive")) {
 						// Set values from existing header
 						String keepAliveInfo = resp.headers.get("Keep-Alive");
-						timeout = 0;
+						timeout = 5;
 						maxRequests = 0;
 						for (String entry : keepAliveInfo.split(", ")) {
 							// Parse
@@ -368,10 +364,8 @@ public class ConnectedClient {
 						}
 					} else
 						resp.setHeader("Keep-Alive", "timeout=" + timeout + ", max=" + maxRequests);
-					if (timeout != 0) {
-						keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
-						keepAliveProcessor.start();
-					}
+					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
+					keepAliveProcessor.start();
 					if (maxRequests != 0)
 						requestNumber++;
 					else

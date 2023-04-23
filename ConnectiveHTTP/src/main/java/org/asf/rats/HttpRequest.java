@@ -25,7 +25,7 @@ public class HttpRequest {
 
 	@Deprecated
 	public String body = null;
-	protected InputStream bodyStream = null;
+	protected LengthTrackingStream bodyStream = null;
 
 	public String query = "";
 
@@ -76,7 +76,7 @@ public class HttpRequest {
 		}
 
 		if (msg.method.equals("POST") || msg.method.equals("PUT")) {
-			msg.bodyStream = request;
+			msg.bodyStream = new LengthTrackingStream(request);
 		}
 
 		return msg;
@@ -120,7 +120,7 @@ public class HttpRequest {
 	 * 
 	 * @return Body InputStream or null.
 	 */
-	public InputStream getRequestBodyStream() {
+	public LengthTrackingStream getRequestBodyStream() {
 		return bodyStream;
 	}
 

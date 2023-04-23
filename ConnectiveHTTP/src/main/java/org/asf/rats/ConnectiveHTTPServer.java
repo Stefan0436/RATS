@@ -49,7 +49,7 @@ public class ConnectiveHTTPServer {
 	}
 
 	protected String name = "ASF Connective";
-	protected String version = "1.0.0.A11";
+	protected String version = "1.0.0.A12";
 
 	protected boolean connected = false;
 	protected ServerSocket socket = null;

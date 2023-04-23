@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.stream.Stream;
+import java.util.Random;
 
 import javax.net.ssl.SSLException;
 
@@ -25,7 +26,7 @@ import org.asf.rats.processors.HttpUploadProcessor;
 public class ConnectedClient {
 	protected static String[] uploadMethods = new String[] { "POST", "PUT", "DELETE", "PATCH" };
 
-	protected static int timeout = 0;
+	protected static int timeout = 5;
 	protected static int maxRequests = 0;
 
 	protected Socket client;
@@ -38,8 +39,6 @@ public class ConnectedClient {
 	protected Thread keepAliveProcessor = null;
 
 	protected int requestNumber = 0;
-	protected boolean keepAliveTHEnd = true;
-
 	private Logger logger = LogManager.getLogger("connective-http");
 
 	public ConnectedClient(Socket client, InputStream input, OutputStream output, ConnectiveHTTPServer server) {
@@ -117,13 +116,6 @@ public class ConnectedClient {
 	 */
 	protected void processRequest(HttpRequest msg) throws IOException {
 		receiving = true;
-		while (!keepAliveTHEnd) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				break;
-			}
-		}
 
 		// Handle client keep-alive
 		boolean clientKeepAlive = false;
@@ -217,6 +209,28 @@ public class ConnectedClient {
 				HttpUploadProcessor processor = impl.instanciate(server, msg);
 				processor.process((msg.headers.get("Content-Type") == null ? msg.headers.get("Content-type")
 						: msg.headers.get("Content-Type")), client, msg.method);
+
+				// Read remaining bytes
+				if (msg.getRequestBodyStream() != null) {
+					// Read all remaining bytes from the content stream
+					LengthTrackingStream strm = msg.getRequestBodyStream();
+
+					// FIXME: simplify when the header problem is solved
+					if (msg.headers.containsKey("Content-Length")) {
+						long length = Long.parseLong(msg.headers.get("Content-Length"));
+						for (long i = strm.getBytesRead(); i < length; i++)
+							strm.read();
+					} else if (msg.headers.containsKey("Content-length")) {
+						long length = Long.parseLong(msg.headers.get("Content-length"));
+						for (long i = strm.getBytesRead(); i < length; i++)
+							strm.read();
+					} else if (msg.headers.containsKey("content-length")) {
+						long length = Long.parseLong(msg.headers.get("content-Length"));
+						for (long i = strm.getBytesRead(); i < length; i++)
+							strm.read();
+					}
+				}
+
 				HttpResponse resp = processor.getResponse();
 				if (resp.status >= 400)
 					logger.error(msg.version + " " + msg.method + " " + msg.path
@@ -267,6 +281,8 @@ public class ConnectedClient {
 						requestNumber++;
 					else
 						requestNumber = 1;
+					rndT = rnd.nextInt();
+					tsT = System.currentTimeMillis();
 					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
 					keepAliveProcessor.start();
 					resp.setConnectionState("Keep-Alive");
@@ -318,6 +334,28 @@ public class ConnectedClient {
 			if (compatible) {
 				HttpGetProcessor processor = impl.instanciate(server, msg);
 				processor.process(client);
+
+				// Read remaining bytes
+				if (msg.getRequestBodyStream() != null) {
+					// Read all remaining bytes from the content stream
+					LengthTrackingStream strm = msg.getRequestBodyStream();
+
+					// FIXME: simplify when the header problem is solved
+					if (msg.headers.containsKey("Content-Length")) {
+						long length = Long.parseLong(msg.headers.get("Content-Length"));
+						for (long i = strm.getBytesRead(); i < length; i++)
+							strm.read();
+					} else if (msg.headers.containsKey("Content-length")) {
+						long length = Long.parseLong(msg.headers.get("Content-length"));
+						for (long i = strm.getBytesRead(); i < length; i++)
+							strm.read();
+					} else if (msg.headers.containsKey("content-length")) {
+						long length = Long.parseLong(msg.headers.get("content-Length"));
+						for (long i = strm.getBytesRead(); i < length; i++)
+							strm.read();
+					}
+				}
+
 				HttpResponse resp = processor.getResponse();
 				if (resp.status >= 400)
 					logger.error(msg.version + " " + msg.method + " " + msg.path
@@ -364,6 +402,8 @@ public class ConnectedClient {
 						}
 					} else
 						resp.setHeader("Keep-Alive", "timeout=" + timeout + ", max=" + maxRequests);
+					rndT = rnd.nextInt();
+					tsT = System.currentTimeMillis();
 					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
 					keepAliveProcessor.start();
 					if (maxRequests != 0)
@@ -399,19 +439,18 @@ public class ConnectedClient {
 	}
 
 	protected boolean receiving = false;
+	private static Random rnd = new Random();
+	private int rndT = 0;
+	private long tsT = 0;
 
 	protected void keepAlive() {
-		if (timeout == 0)
-			return;
-
-		keepAliveTHEnd = false;
+		int rndTc = rndT;
+		long tsTc = tsT;
 
 		int current = 0;
-		while (!receiving) {
-			if (receiving) {
-				keepAliveTHEnd = true;
+		while (!receiving && tsTc == tsT && rndTc == rndT) {
+			if (receiving || tsTc != tsT || rndTc != rndT)
 				return;
-			}
 			if (current >= timeout) {
 				closeConnection();
 				break;
@@ -423,8 +462,6 @@ public class ConnectedClient {
 				break;
 			}
 		}
-
-		keepAliveTHEnd = true;
 	}
 
 	protected void receive() {

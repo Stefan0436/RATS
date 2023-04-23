@@ -283,11 +283,11 @@ public class ConnectedClient {
 						requestNumber = 1;
 					rndT = rnd.nextInt();
 					tsT = System.currentTimeMillis();
+					receiving = false;
 					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
 					keepAliveProcessor.start();
 					resp.setConnectionState("Keep-Alive");
 					resp.build(output);
-					receiving = false;
 				}
 			}
 		} else if (msg.method.equals("GET") || msg.method.equals("HEAD")) {
@@ -404,6 +404,7 @@ public class ConnectedClient {
 						resp.setHeader("Keep-Alive", "timeout=" + timeout + ", max=" + maxRequests);
 					rndT = rnd.nextInt();
 					tsT = System.currentTimeMillis();
+					receiving = false;
 					keepAliveProcessor = new Thread(() -> keepAlive(), "Client keepalive " + client);
 					keepAliveProcessor.start();
 					if (maxRequests != 0)
@@ -412,7 +413,6 @@ public class ConnectedClient {
 						requestNumber = 1;
 					resp.setConnectionState("Keep-Alive");
 					resp.build(output);
-					receiving = false;
 				}
 			}
 		}
